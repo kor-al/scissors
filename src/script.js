@@ -428,6 +428,11 @@ window.addEventListener("mousemove", (event) => {
   mouse.y = -(event.clientY / sizes.height) * 2 + 1;
 });
 
+window.addEventListener('touchend',  (event) => {
+    mouse.x = +(event.changedTouches[0].clientX / sizes.width) * 2 +-1;
+    mouse.y = -(event.changedTouches[0].clientY / sizes.height) * 2 + 1;
+});
+
 //click event
 
 function handleClick(e) {
@@ -440,7 +445,7 @@ function handleClick(e) {
       intersects[0].object.userData.groupName
     : null;
   if (group) {
-    console.log(group, intersects[0]);
+    console.log(group, intersects);
     const targetPosition = new THREE.Vector3(
       modelsParams.cameraPositions[group].x,
       modelsParams.cameraPositions[group].y,
@@ -460,13 +465,9 @@ function handleClick(e) {
           controls.update();
           controls.target.lerp(targetPoint, this.progress());
         },
-        onComplete: () => {
-          controls.target.set(
-            modelsParams.positions[group].x,
-            modelsParams.positions[group].y,
-            modelsParams.positions[group].z
-          );
-        },
+        // onComplete: () => {
+        //     console.log('finished')
+        // },
       }
     );
   }
