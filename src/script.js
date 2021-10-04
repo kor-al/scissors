@@ -261,12 +261,12 @@ const updateAllMaterials = () => {
  * Environment map
  */
 const environmentMap = cubeTextureLoader.load([
-  "/textures/environmentMaps/milkyway/px.png",
-  "/textures/environmentMaps/milkyway/nx.png",
-  "/textures/environmentMaps/milkyway/py.png",
-  "/textures/environmentMaps/milkyway/ny.png",
-  "/textures/environmentMaps/milkyway/pz.png",
-  "/textures/environmentMaps/milkyway/nz.png",
+  "./textures/environmentMaps/milkyway/px.png",
+  "./textures/environmentMaps/milkyway/nx.png",
+  "./textures/environmentMaps/milkyway/py.png",
+  "./textures/environmentMaps/milkyway/ny.png",
+  "./textures/environmentMaps/milkyway/pz.png",
+  "./textures/environmentMaps/milkyway/nz.png",
 ]);
 
 environmentMap.encoding = THREE.sRGBEncoding;
