@@ -87,7 +87,7 @@ const overlayMaterial = new THREE.ShaderMaterial({
     `,
 });
 const overlay = new THREE.Mesh(overlayGeometry, overlayMaterial);
-overlay.name = 'overlay'
+overlay.name = "overlay";
 scene.add(overlay);
 
 /**
@@ -321,16 +321,20 @@ function assignMaterial(parent, type, mlt) {
  * Models
  */
 
-const models = []
+const models = [];
 
 const modelsParams = {
   center: { x: 0, z: 0 },
   radius: 0.3,
-  files: ["./models/tailorShears.glb", "./models/hairShears.glb", "./models/paperScissors.glb"],
+  files: [
+    "./models/tailorShears.glb",
+    "./models/hairShears.glb",
+    "./models/paperScissors.glb",
+  ],
   names: ["tailorShears", "hairShears", "paperScissors"],
   //cameraPosition: { x: 0.5, y: 0.2, z: 0 },//{ x: 0.6, y: -0.1, z: 0 },
   positions: {},
-  cameraPositions: {}
+  cameraPositions: {},
 };
 
 function findPositionsOnCircle(center, nPoints, radius) {
@@ -351,25 +355,25 @@ const positionsOnCircle = findPositionsOnCircle(
 );
 
 const positionsOnCircleCamera = findPositionsOnCircle(
-    modelsParams.center,
-    modelsParams.files.length,
-    modelsParams.radius + 0.25
-  );
+  modelsParams.center,
+  modelsParams.files.length,
+  modelsParams.radius + 0.25
+);
 
 console.log(positionsOnCircleCamera);
 const group = new THREE.Group();
 
 for (let i = 0; i < modelsParams.files.length; i++) {
-    const file = modelsParams.files[i]
+  const file = modelsParams.files[i];
   gltfLoader.load(file, (gltf) => {
     const model = gltf.scene.children[0]; //screw as group
-    model.userData.groupName = modelsParams.names[i]
+    model.userData.groupName = modelsParams.names[i];
     model.position.set(positionsOnCircle[i].x, 0, positionsOnCircle[i].z);
     model.scale.set(2.5, 2.5, 2.5);
     //model.rotation.z = (-Math.PI / 4) * (i + 1);
     //model.rotation.x = -Math.PI / 2;
-    if(i == 2) model.rotation.y = 2*Math.PI/3;
-    if(i == 1) model.rotation.y = Math.PI/3;
+    if (i == 2) model.rotation.y = (2 * Math.PI) / 3;
+    if (i == 1) model.rotation.y = Math.PI / 3;
 
     console.log(model);
     for (let obj of initMaterialMap) {
@@ -378,8 +382,12 @@ for (let i = 0; i < modelsParams.files.length; i++) {
 
     group.add(model);
     models.push(model);
-    modelsParams.positions[model.userData.groupName ] = model.position
-    modelsParams.cameraPositions[model.userData.groupName ] = new THREE.Vector3(positionsOnCircleCamera[i].x, 0.2, positionsOnCircleCamera[i].z)
+    modelsParams.positions[model.userData.groupName] = model.position;
+    modelsParams.cameraPositions[model.userData.groupName] = new THREE.Vector3(
+      positionsOnCircleCamera[i].x,
+      0.2,
+      positionsOnCircleCamera[i].z
+    );
 
     updateAllMaterials();
   });
@@ -387,18 +395,17 @@ for (let i = 0; i < modelsParams.files.length; i++) {
 //group.rotation.z = -Math.PI / 8;
 scene.add(group);
 
-
 /**
  * Points of interest
  */
 const raycaster = new THREE.Raycaster();
-let currentIntersect = null
+let currentIntersect = null;
 
 //points do not include position transformation
 const points = [
   {
-    model: 'tailorScissors',
-    position: new THREE.Vector3(0,0,0),
+    model: "tailorScissors",
+    position: new THREE.Vector3(0, 0, 0),
     element: document.querySelector(".point-0"),
   },
   {
@@ -414,53 +421,58 @@ const points = [
 /**
  * Mouse
  */
- const mouse = new THREE.Vector2()
+const mouse = new THREE.Vector2();
 
- window.addEventListener('mousemove', (event) =>
- {
-     mouse.x = event.clientX / sizes.width * 2 - 1
-     mouse.y = - (event.clientY / sizes.height) * 2 + 1
- })
- 
- window.addEventListener('click', () =>
- {
-     // Cast a ray from the mouse and handle events
-    raycaster.setFromCamera(mouse, camera)
-    const intersects = raycaster.intersectObjects(models, true)
-    console.log(intersects)
-    let group = intersects.length ? intersects[0].object.parent.userData.groupName || intersects[0].object.userData.groupName : null;
-    if (group) {
-        console.log(group, intersects[0]);
-        const targetPosition = new THREE.Vector3(modelsParams.cameraPositions[group].x , modelsParams.cameraPositions[group].y, modelsParams.cameraPositions[group].z)
-        const targetPoint = new THREE.Vector3(modelsParams.positions[group].x , modelsParams.positions[group].y, modelsParams.positions[group].z)
-        gsap.to({}, {
-            duration: 2,
-            onUpdate: function() {
-                camera.position.lerp(targetPosition, this.progress());
-                controls.target.lerp(targetPoint, this.progress());
+window.addEventListener("mousemove", (event) => {
+  mouse.x = (event.clientX / sizes.width) * 2 - 1;
+  mouse.y = -(event.clientY / sizes.height) * 2 + 1;
+});
 
-            },
-            onComplete: ()=> {
-                controls.target.set(modelsParams.positions[group].x , modelsParams.positions[group].y, modelsParams.positions[group].z)
-            }
-        });
-    }
-    // 
-    // camera.position.set(modelsParams.cameraPositions[group].x , modelsParams.cameraPositions[group].y, modelsParams.cameraPositions[group].z)
-    // controls.update();
+//click event
 
-
-    /**
- *  GSAP
- */
-
-
-
-    //for (const intersect of intersects){
-    //    group = intersect.object.parent.userData.groupName || intersect.object.userData.groupName
-    //    console.log(intersect.distance, intersect.point)
-    //}
- })
+function handleClick(e) {
+  // Cast a ray from the mouse and handle events
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(models, true);
+  console.log(intersects);
+  let group = intersects.length
+    ? intersects[0].object.parent.userData.groupName ||
+      intersects[0].object.userData.groupName
+    : null;
+  if (group) {
+    console.log(group, intersects[0]);
+    const targetPosition = new THREE.Vector3(
+      modelsParams.cameraPositions[group].x,
+      modelsParams.cameraPositions[group].y,
+      modelsParams.cameraPositions[group].z
+    );
+    const targetPoint = new THREE.Vector3(
+      modelsParams.positions[group].x,
+      modelsParams.positions[group].y,
+      modelsParams.positions[group].z
+    );
+    gsap.to(
+      {},
+      {
+        duration: 2,
+        onUpdate: function () {
+          camera.position.lerp(targetPosition, this.progress());
+          controls.update();
+          controls.target.lerp(targetPoint, this.progress());
+        },
+        onComplete: () => {
+          controls.target.set(
+            modelsParams.positions[group].x,
+            modelsParams.positions[group].y,
+            modelsParams.positions[group].z
+          );
+        },
+      }
+    );
+  }
+}
+window.addEventListener("touchend", handleClick);
+window.addEventListener("click", handleClick);
 
 /**
  * Lights
@@ -527,7 +539,7 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(
   positionsOnCircleCamera[0].x,
   0.2,
-  positionsOnCircleCamera[0].z,
+  positionsOnCircleCamera[0].z
 );
 
 scene.add(camera);
@@ -581,9 +593,6 @@ const tick = () => {
 
   // Update points only when the scene is ready
   if (sceneReady) {
-
-
-
     // Go through each point
     //   for(const point of points)
     //   {
@@ -626,7 +635,6 @@ const tick = () => {
 
   const elapsedTime = clock.getElapsedTime();
   const radiansPerSecond = 0.5;
-
 
   //waterMaterial.uniforms.uTime.value = elapsedTime;
   noiseMaterial.uniforms.uTime.value = elapsedTime;
