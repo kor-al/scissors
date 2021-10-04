@@ -326,7 +326,7 @@ const models = []
 const modelsParams = {
   center: { x: 0, z: 0 },
   radius: 0.3,
-  files: ["/models/tailorShears.glb", "/models/hairShears.glb", "/models/paperScissors.glb"],
+  files: ["./models/tailorShears.glb", "./models/hairShears.glb", "./models/paperScissors.glb"],
   names: ["tailorShears", "hairShears", "paperScissors"],
   //cameraPosition: { x: 0.5, y: 0.2, z: 0 },//{ x: 0.6, y: -0.1, z: 0 },
   positions: {},
@@ -627,7 +627,7 @@ const tick = () => {
   const elapsedTime = clock.getElapsedTime();
   const radiansPerSecond = 0.5;
 
-  
+
   //waterMaterial.uniforms.uTime.value = elapsedTime;
   noiseMaterial.uniforms.uTime.value = elapsedTime;
 
