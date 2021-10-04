@@ -48,6 +48,44 @@ const gltfLoader = new GLTFLoader(loadingManager);
 const cubeTextureLoader = new THREE.CubeTextureLoader(loadingManager);
 
 /**
+ * Sizes
+ */
+const sizes = {
+  width: window.innerWidth,
+  height: window.innerHeight,
+};
+
+window.addEventListener("resize", () => {
+  // Update sizes
+  sizes.width = window.innerWidth;
+  sizes.height = window.innerHeight;
+
+  // Update camera
+  camera.aspect = sizes.width / sizes.height;
+  camera.updateProjectionMatrix();
+
+  //Update models
+  if (sizes.height > sizes.width) {
+    for (const model of models) {
+      console.log(model.userData.groupName);
+      model.rotation.x = -Math.PI / 2;
+      model.rotation.y = Math.PI / 12;
+    }
+  } else {
+    for (let i = 0; i < models.length; i++) {
+      const model = models[i];
+      console.log(model.userData.groupName);
+      model.rotation.x = 0;
+      model.rotation.y = (i * Math.PI) / 3;
+    }
+  }
+
+  // Update renderer
+  renderer.setSize(sizes.width, sizes.height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
+
+/**
  * Base
  */
 // Debug
@@ -371,9 +409,12 @@ for (let i = 0; i < modelsParams.files.length; i++) {
     model.position.set(positionsOnCircle[i].x, 0, positionsOnCircle[i].z);
     model.scale.set(2.5, 2.5, 2.5);
     //model.rotation.z = (-Math.PI / 4) * (i + 1);
-    //model.rotation.x = -Math.PI / 2;
-    if (i == 2) model.rotation.y = (2 * Math.PI) / 3;
-    if (i == 1) model.rotation.y = Math.PI / 3;
+    if (sizes.height > sizes.width) {
+      model.rotation.x = -Math.PI / 2;
+      model.rotation.y = Math.PI / 12;
+    } else {
+      model.rotation.y = (i * Math.PI) / 3;
+    }
 
     console.log(model);
     for (let obj of initMaterialMap) {
@@ -428,9 +469,9 @@ window.addEventListener("mousemove", (event) => {
   mouse.y = -(event.clientY / sizes.height) * 2 + 1;
 });
 
-window.addEventListener('touchend',  (event) => {
-    mouse.x = +(event.changedTouches[0].clientX / sizes.width) * 2 +-1;
-    mouse.y = -(event.changedTouches[0].clientY / sizes.height) * 2 + 1;
+window.addEventListener("touchend", (event) => {
+  mouse.x = +(event.changedTouches[0].clientX / sizes.width) * 2 + -1;
+  mouse.y = -(event.changedTouches[0].clientY / sizes.height) * 2 + 1;
 });
 
 //click event
@@ -503,28 +544,6 @@ gui
   .max(5)
   .step(0.001)
   .name("lightZ");
-
-/**
- * Sizes
- */
-const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight,
-};
-
-window.addEventListener("resize", () => {
-  // Update sizes
-  sizes.width = window.innerWidth;
-  sizes.height = window.innerHeight;
-
-  // Update camera
-  camera.aspect = sizes.width / sizes.height;
-  camera.updateProjectionMatrix();
-
-  // Update renderer
-  renderer.setSize(sizes.width, sizes.height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-});
 
 /**
  * Camera
