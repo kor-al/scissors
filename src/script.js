@@ -8,6 +8,15 @@ import noiseVertexShader from "./shaders/noise/vertex.glsl";
 import noiseFragmentShader from "./shaders/noise/fragment.glsl";
 import { gsap } from "gsap";
 import * as dat from "dat.gui";
+import { Vector3 } from "three";
+import Stats from "three/examples/jsm/libs/stats.module";
+
+/**
+ * Stats
+ */
+var stats = new Stats();
+stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild(stats.dom);
 
 /**
  * Loaders
@@ -173,7 +182,7 @@ gui
  * Noise Material
  */
 // Geometry
-//const waterGeometry = new THREE.PlaneBufferGeometry(2, 2, 512, 512);
+const waterGeometry = new THREE.PlaneBufferGeometry(2, 2, 512, 512);
 
 // Colors
 // debugObject.depthColor = "#186691";
@@ -272,8 +281,8 @@ gui
 //   .step(0.001)
 //   .name("uColorMultiplier");
 
-// // Mesh
-// const water = new THREE.Mesh(waterGeometry, waterMaterial)
+// // // Mesh
+// const water = new THREE.Mesh(waterGeometry, metalMaterial)
 // water.rotation.x = - Math.PI * 0.5
 // scene.add(water)
 
@@ -324,15 +333,39 @@ const metalMaterial = new THREE.MeshPhysicalMaterial({
   side: THREE.DoubleSide,
 });
 
+// // Mesh
+// const plane = new THREE.Mesh(waterGeometry, metalMaterial)
+// plane.rotation.x = - Math.PI * 0.5
+// plane.position.y = -0.1
+// scene.add(plane)
+
+// Create cube render target
+//const cubeRenderTarget = new THREE.WebGLCubeRenderTarget( 128, { format: THREE.RGBFormat, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter } );
+
+// Create cube camera
+//var mirrorSphereCamera = new THREE.CubeCamera( 0.1, 5000, 512 );
+// mirrorCubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter;
+//scene.add( mirrorSphereCamera );
+
+//
+//const sphereGeometry = new THREE.SphereBufferGeometry(0.3, 32, 32);
+
+// const sphere = new THREE.Mesh(sphereGeometry, mirrorSphereMaterial);
+// mirrorSphereCamera.position = sphere.position;
+// sphere.castShadow = false;
+// sphere.receiveShadow = true; //default
+// sphere.position.y = 0;
+// scene.add(sphere);
+
 /**
  * Background
  */
 scene.background = new THREE.Color(debugObject.background);
-scene.fog = new THREE.Fog(debugObject.background, 0.2, 1);
+scene.fog = new THREE.Fog(debugObject.background, 0.5, 2);
 gui.addColor(debugObject, "background").onChange(() => {
   //material.color.set(parameters.color)
   scene.background = new THREE.Color(debugObject.background);
-  scene.fog = new THREE.Fog(debugObject.background, 0.2, 1);
+  scene.fog = new THREE.Fog(debugObject.background, 0.3, 2);
 });
 
 const initMaterial = metalMaterial; //noiseMaterial;
@@ -356,6 +389,40 @@ function assignMaterial(parent, type, mlt) {
 }
 
 /**
+ * Points of interest
+ */
+const raycaster = new THREE.Raycaster();
+let currentIntersect = null;
+
+//points do not include position transformation
+const points = [
+  {
+    model: "tailorShears",
+    position: new THREE.Vector3(0.01, 0.01, 0.001),
+    element: document.querySelector(".point-0"),
+    name: "screw",
+  },
+  {
+    model: "tailorShears",
+    position: new THREE.Vector3(0.12, 0.01, 0.1),
+    element: document.querySelector(".point-1"),
+    name: "thumbBow",
+  },
+  {
+    model: "tailorShears",
+    position: new THREE.Vector3(0.001, 0.01, 0.16),
+    element: document.querySelector(".point-2"),
+    name: "fingerBow",
+  },
+  {
+    model: "tailorShears",
+    position: new THREE.Vector3(-0.04, 0.002, 0.14),
+    element: document.querySelector(".point-3"),
+    name: "silencer",
+  },
+];
+
+/**
  * Models
  */
 
@@ -372,6 +439,8 @@ const modelsParams = {
   names: ["tailorShears", "hairShears", "paperScissors"],
   //cameraPosition: { x: 0.5, y: 0.2, z: 0 },//{ x: 0.6, y: -0.1, z: 0 },
   positions: {},
+  rotations: {},
+  startRotationsZ: {},
   cameraPositions: {},
 };
 
@@ -407,23 +476,27 @@ for (let i = 0; i < modelsParams.files.length; i++) {
     const model = gltf.scene.children[0]; //screw as group
     model.userData.groupName = modelsParams.names[i];
     model.position.set(positionsOnCircle[i].x, 0, positionsOnCircle[i].z);
+    console.log(model.userData.groupName, "pivot", model.position);
     model.scale.set(2.5, 2.5, 2.5);
-    //model.rotation.z = (-Math.PI / 4) * (i + 1);
+
     if (sizes.height > sizes.width) {
       model.rotation.x = -Math.PI / 2;
-      model.rotation.y = Math.PI / 12;
+      model.rotation.z = -Math.PI / 2;
+      //model.rotation.y = Math.PI / 12;
     } else {
       model.rotation.y = (i * Math.PI) / 3;
     }
 
-    console.log(model);
     for (let obj of initMaterialMap) {
       //assignMaterial(model, obj.objectID, obj.material);
     }
 
+
     group.add(model);
     models.push(model);
     modelsParams.positions[model.userData.groupName] = model.position;
+    modelsParams.rotations[model.userData.groupName] = model.rotation;
+    modelsParams.startRotationsZ[model.userData.groupName] = model.rotation.z;
     modelsParams.cameraPositions[model.userData.groupName] = new THREE.Vector3(
       positionsOnCircleCamera[i].x,
       0.2,
@@ -437,32 +510,13 @@ for (let i = 0; i < modelsParams.files.length; i++) {
 scene.add(group);
 
 /**
- * Points of interest
- */
-const raycaster = new THREE.Raycaster();
-let currentIntersect = null;
-
-//points do not include position transformation
-const points = [
-  {
-    model: "tailorScissors",
-    position: new THREE.Vector3(0, 0, 0),
-    element: document.querySelector(".point-0"),
-  },
-  {
-    position: new THREE.Vector3(0.5, 0.8, -1.6),
-    element: document.querySelector(".point-1"),
-  },
-  {
-    position: new THREE.Vector3(1.6, -1.3, -0.7),
-    element: document.querySelector(".point-2"),
-  },
-];
-
-/**
  * Mouse
  */
 const mouse = new THREE.Vector2();
+const state = {
+    selectedModel: modelsParams.names[0],
+    rotationStopped: true
+}
 
 window.addEventListener("mousemove", (event) => {
   mouse.x = (event.clientX / sizes.width) * 2 - 1;
@@ -480,23 +534,15 @@ function handleClick(e) {
   // Cast a ray from the mouse and handle events
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObjects(models, true);
-  console.log(intersects);
   let group = intersects.length
     ? intersects[0].object.parent.userData.groupName ||
       intersects[0].object.userData.groupName
     : null;
-  if (group) {
+  if (group && group != state.selectedModel) {
     console.log(group, intersects);
-    const targetPosition = new THREE.Vector3(
-      modelsParams.cameraPositions[group].x,
-      modelsParams.cameraPositions[group].y,
-      modelsParams.cameraPositions[group].z
-    );
-    const targetPoint = new THREE.Vector3(
-      modelsParams.positions[group].x,
-      modelsParams.positions[group].y,
-      modelsParams.positions[group].z
-    );
+    state.selectedModel = group;
+    const targetPosition = modelsParams.cameraPositions[group];
+    const targetPoint = modelsParams.positions[group];
     gsap.to(
       {},
       {
@@ -591,21 +637,42 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 /**
  * Colors
  */
-const color = [
-  {
-    color: "66557c",
-  },
-  {
-    color: "153944",
-  },
-];
-const tray = document.getElementById("js-tray-slide");
+// const color = [
+//   {
+//     color: "66557c",
+//   },
+//   {
+//     color: "153944",
+//   },
+// ];
+// const tray = document.getElementById("js-tray-slide");
+
+debugObject.toggleRotation = ()=>{
+    for(const model of models){
+        if (model.userData.groupName == state.selectedModel){
+            console.log(model.userData.groupName)
+            console.log(modelsParams.rotations[model.userData.groupName])
+            //model.rotation.x = modelsParams.rotations[state.selectedModel].x
+            model.rotation.z = modelsParams.startRotationsZ[state.selectedModel]
+            console.log(model)
+        }
+    }
+    state.rotationStopped = !state.rotationStopped
+
+}
+
+gui.add(debugObject, 'toggleRotation')
 
 /**
  * Animate
  */
+console.log(points);
 const clock = new THREE.Clock();
+const radiansPerSecond = 0.5;
+
 const tick = () => {
+  stats.begin();
+
   const delta = clock.getDelta();
   // Update controls
   controls.update();
@@ -613,60 +680,77 @@ const tick = () => {
 
   // Update points only when the scene is ready
   if (sceneReady) {
-    // Go through each point
-    //   for(const point of points)
-    //   {
-    //       // Get 2D screen position
-    //       const screenPosition = point.position.clone()
-    //       screenPosition.project(camera)
-    //       // Set the raycaster
-    //       raycaster.setFromCamera(screenPosition, camera)
-    //       const intersects = raycaster.intersectObjects(scene.children, true)
-    //       // No intersect found
-    //       if(intersects.length === 0)
-    //       {
-    //           // Show
-    //           point.element.classList.add('visible')
-    //       }
-    //       // Intersect found
-    //       else
-    //       {
-    //           // Get the distance of the intersection and the distance of the point
-    //           const intersectionDistance = intersects[0].distance
-    //           const pointDistance = point.position.distanceTo(camera.position)
-    //           // Intersection is close than the point
-    //           if(intersectionDistance < pointDistance)
-    //           {
-    //               // Hide
-    //               point.element.classList.remove('visible')
-    //           }
-    //           // Intersection is further than the point
-    //           else
-    //           {
-    //               // Show
-    //               point.element.classList.add('visible')
-    //           }
-    //       }
-    //       const translateX = screenPosition.x * sizes.width * 0.5
-    //       const translateY = - screenPosition.y * sizes.height * 0.5
-    //       point.element.style.transform = `translateX(${translateX}px) translateY(${translateY}px)`
-    //   }
+    //Go through each point
+    for (const point of points) {
+      //skip points that are irrelevant for the selected model OR points that are far away
+      if (
+        state.selectedModel != point.model ||
+        (state.selectedModel == point.model && !state.rotationStopped) ||
+        point.position.distanceTo(camera.position) > 0.7
+      ) {
+        point.element.classList.remove("visible");
+        continue;
+      }
+
+      //Rotate
+      const newPosition = point.position.clone();
+       const q = new THREE.Quaternion();
+      q.setFromEuler(modelsParams.rotations[point.model]);
+      newPosition.applyQuaternion(q);
+      newPosition.add(modelsParams.positions[point.model]);
+
+      // Get 2D screen position
+      const screenPosition = newPosition.clone();
+      screenPosition.project(camera);
+      // Set the raycaster
+      raycaster.setFromCamera(screenPosition, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
+      // No intersect found
+      if (intersects.length === 0) {
+        // Show
+        point.element.classList.add("visible");
+      }
+      // Intersect found
+      else {
+        // Get the distance of the intersection and the distance of the point
+        const intersectionDistance = intersects[0].distance;
+        const pointDistance = newPosition.distanceTo(camera.position);
+        // Intersection is close than the point
+        if (intersectionDistance < pointDistance) {
+          // Hide
+          point.element.classList.remove("visible");
+        }
+        // Intersection is further than the point
+        else {
+          // Show
+          point.element.classList.add("visible");
+        }
+      }
+      const translateX = screenPosition.x * sizes.width * 0.5;
+      const translateY = -screenPosition.y * sizes.height * 0.5;
+      point.element.style.transform = `translateX(${translateX}px) translateY(${translateY}px)`;
+    }
   }
 
   const elapsedTime = clock.getElapsedTime();
-  const radiansPerSecond = 0.5;
 
   //waterMaterial.uniforms.uTime.value = elapsedTime;
   noiseMaterial.uniforms.uTime.value = elapsedTime;
 
   //Rotate
   for (let model of group.children) {
-    //console.log(model)
+    const modelName = model.userData.groupName;
+    //console.log(model.userData.groupName)
+    if(state.selectedModel == modelName && state.rotationStopped){
+        continue
+    }
     model.rotation.z += radiansPerSecond * delta;
   }
 
   // Render
   renderer.render(scene, camera);
+
+  stats.end();
 
   // Call tick again on the next frame
   window.requestAnimationFrame(tick);
