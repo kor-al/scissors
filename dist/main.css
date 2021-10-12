@@ -2,12 +2,14 @@
 {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
 html,
 body
 {
     overflow: hidden;
+    color: white;
 }
 
 .webgl
@@ -16,6 +18,8 @@ body
     top: 0;
     left: 0;
     outline: none;
+    width: 100%;
+    height: 100%;
 }
 
 .loading-bar
@@ -55,7 +59,6 @@ body
     border-radius: 50%;
     background: #00000050;
     border: 1px solid #ffffff77;
-    color: #ffffff;
     font-family: Helvetica, Arial, sans-serif;
     text-align: center;
     line-height: 40px;
@@ -100,5 +103,76 @@ body
 .controls{
     position: absolute;
 }
+
+.nav{
+   position: absolute;
+    top: 70%;
+    left: 60%;
+    opacity: 1;
+    padding: 1rem;
+    /* pointer-events: none; */
+}
+
+
+.infoPanel{
+    opacity: 0;
+    /* remove from the document flow */
+    position: absolute;
+    top: 0%;
+}
+
+
+.infoPanel.visible{
+    opacity: 1;
+    transition: opacity ease-in-out 1s;
+    /* return to the document flow */
+    position: relative; 
+}
+
+.infoPanel > p{
+    padding-bottom: 1rem;
+    border-radius: 4px;
+
+    color: #ffffff;
+    line-height: 1.3em;
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: 100;
+    font-size: 14px;
+    
+    pointer-events: none;
+}
+
+h2{
+    padding-bottom: 1rem;
+}
+
+.controls{
+    opacity: 0;
+}
+
+.controls.visible{
+    opacity: 1;
+    transition: opacity ease-in-out 1s;
+}
+
+button{
+    cursor:pointer;
+    background-color: transparent;
+    padding: 0.5rem 1rem;
+    color: white;
+    border: 1px solid #ffffff77;
+    transition: background-color ease-in-out 300ms;
+}
+
+button:hover{
+    background-color: #ffffff33;
+}
+
+@media screen and (max-width: 600px) {
+    .nav{
+        top: 65%;
+        left: 0%;
+    }
+  }
 
 /*# sourceMappingURL=main.css.map*/

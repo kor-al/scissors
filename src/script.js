@@ -43,6 +43,7 @@ const loadingManager = new THREE.LoadingManager(
 
     window.setTimeout(() => {
       sceneReady = true;
+      //panels[state.selectedModel].classList.add("visible");
     }, 2000);
   },
 
@@ -440,8 +441,10 @@ const modelsParams = {
   //cameraPosition: { x: 0.5, y: 0.2, z: 0 },//{ x: 0.6, y: -0.1, z: 0 },
   positions: {},
   rotations: {},
+  quaternions: {},
   startRotationsZ: {},
   cameraPositions: {},
+  models: {}
 };
 
 function findPositionsOnCircle(center, nPoints, radius) {
@@ -491,11 +494,11 @@ for (let i = 0; i < modelsParams.files.length; i++) {
       //assignMaterial(model, obj.objectID, obj.material);
     }
 
-
     group.add(model);
     models.push(model);
     modelsParams.positions[model.userData.groupName] = model.position;
     modelsParams.rotations[model.userData.groupName] = model.rotation;
+    modelsParams.quaternions[model.userData.groupName] = model.quaternion;
     modelsParams.startRotationsZ[model.userData.groupName] = model.rotation.z;
     modelsParams.cameraPositions[model.userData.groupName] = new THREE.Vector3(
       positionsOnCircleCamera[i].x,
@@ -510,13 +513,26 @@ for (let i = 0; i < modelsParams.files.length; i++) {
 scene.add(group);
 
 /**
+ * State
+ */
+
+const state = {
+  selectedModel: null, //modelsParams.names[0],
+  rotationStopped: false,
+};
+
+/**
+ * Panels
+ */
+const panels = {};
+for (const modelName of modelsParams.names) {
+  panels[modelName] = document.querySelector("." + modelName);
+}
+
+/**
  * Mouse
  */
 const mouse = new THREE.Vector2();
-const state = {
-    selectedModel: modelsParams.names[0],
-    rotationStopped: true
-}
 
 window.addEventListener("mousemove", (event) => {
   mouse.x = (event.clientX / sizes.width) * 2 - 1;
@@ -528,7 +544,27 @@ window.addEventListener("touchend", (event) => {
   mouse.y = -(event.changedTouches[0].clientY / sizes.height) * 2 + 1;
 });
 
+function animateCamera(targetPosition, targetPoint){
+    gsap.to(
+        {},
+        {
+          duration: 2,
+          onUpdate: function () {
+            camera.position.lerp(targetPosition, this.progress());
+            controls.update();
+            controls.target.lerp(targetPoint, this.progress());
+          },
+          onComplete: () => {
+            console.log("finished");
+          },
+          ease:"ease-in-out"
+        }
+      );
+}
+
 //click event
+const navigationElement = document.querySelector(".nav");
+const controlsElement = navigationElement.querySelector(".controls");
 
 function handleClick(e) {
   // Cast a ray from the mouse and handle events
@@ -540,23 +576,24 @@ function handleClick(e) {
     : null;
   if (group && group != state.selectedModel) {
     console.log(group, intersects);
+    if (state.selectedModel)
+      panels[state.selectedModel].classList.remove("visible");
+    if (controlsElement.classList.contains("visible")) {
+        controlsElement.classList.remove("visible");
+      }
+
+    // if (!navigationElement.classList.contains("visible")) {
+    //   navigationElement.classList.add("visible");
+    //}
+    if (!controlsElement.classList.contains("visible")) {
+        setTimeout(()=> {controlsElement.classList.add("visible")
+        }, 1000);
+      }
     state.selectedModel = group;
+    panels[state.selectedModel].classList.add("visible");
     const targetPosition = modelsParams.cameraPositions[group];
     const targetPoint = modelsParams.positions[group];
-    gsap.to(
-      {},
-      {
-        duration: 2,
-        onUpdate: function () {
-          camera.position.lerp(targetPosition, this.progress());
-          controls.update();
-          controls.target.lerp(targetPoint, this.progress());
-        },
-        // onComplete: () => {
-        //     console.log('finished')
-        // },
-      }
-    );
+    animateCamera(targetPosition, targetPoint)
   }
 }
 window.addEventListener("touchend", handleClick);
@@ -567,29 +604,19 @@ window.addEventListener("click", handleClick);
  */
 const directionalLight = new THREE.DirectionalLight("#ffffff", 5);
 directionalLight.castShadow = true;
-directionalLight.shadow.camera.far = 15;
+directionalLight.shadow.camera.far = 5;
 directionalLight.shadow.mapSize.set(1024, 1024);
 directionalLight.shadow.normalBias = 0.05;
-directionalLight.position.set(-2, 1, -0.2);
+//directionalLight.position.set(-2, 1, -0.2);
+directionalLight.position.set(0, 2, 0);
 scene.add(directionalLight);
-gui
-  .add(directionalLight.position, "x")
-  .min(-5)
-  .max(5)
-  .step(0.001)
-  .name("lightX");
+
 gui
   .add(directionalLight.position, "y")
   .min(-5)
   .max(5)
   .step(0.001)
   .name("lightY");
-gui
-  .add(directionalLight.position, "z")
-  .min(-5)
-  .max(5)
-  .step(0.001)
-  .name("lightZ");
 
 /**
  * Camera
@@ -602,21 +629,41 @@ const camera = new THREE.PerspectiveCamera(
   100
 );
 //camera.position.set(0.1, 0.2, 0.1);
-camera.position.set(
-  positionsOnCircleCamera[0].x,
-  0.2,
-  positionsOnCircleCamera[0].z
-);
+// camera.position.set(
+//   positionsOnCircleCamera[0].x,
+//   0.2,
+//   positionsOnCircleCamera[0].z
+// );
 
-scene.add(camera);
+if (sizes.height > sizes.width && sizes.width < 500) {
+  //mobile view
+  camera.position.set(0.6, 0.7, 0.5); //above
+} else {
+  camera.position.set(0, 0.7, 0); //above
+}
+
+function setCameraTopViewPosition() {
+let  targetPosition = new THREE.Vector3(0.1, 0.7, 0);
+  if (sizes.height > sizes.width && sizes.width < 500) {
+    targetPosition = new THREE.Vector3(0.6, 0.7, 0.5);
+  }
+  const targetPoint = new THREE.Vector3(0, 0, 0);
+  animateCamera(targetPosition, targetPoint)
+
+}
 
 // Controls
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
+//controls.enablePan =false;
 controls.rotateSpeed = 0.5;
-controls.target.set(positionsOnCircle[0].x, 0, positionsOnCircle[0].z);
+controls.target.set(0, 0, 0);
+controls.saveState();
+//controls.target.set(positionsOnCircle[0].x, 0, positionsOnCircle[0].z);
 //controls.autoRotate = true;
 //controls.autoRotateSpeed = 0.2;
+
+scene.add(camera);
 
 /**
  * Renderer
@@ -647,26 +694,66 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 // ];
 // const tray = document.getElementById("js-tray-slide");
 
-debugObject.toggleRotation = ()=>{
-    for(const model of models){
-        if (model.userData.groupName == state.selectedModel){
-            console.log(model.userData.groupName)
-            console.log(modelsParams.rotations[model.userData.groupName])
-            //model.rotation.x = modelsParams.rotations[state.selectedModel].x
-            model.rotation.z = modelsParams.startRotationsZ[state.selectedModel]
-            console.log(model)
-        }
+function toggleRotation() {
+  for (const model of models) {
+    if (model.userData.groupName == state.selectedModel) {
+      console.log(model.userData.groupName);
+      console.log(modelsParams.rotations[model.userData.groupName]);
+      //model.rotation.x = modelsParams.rotations[state.selectedModel].x
+      model.rotation.z = modelsParams.startRotationsZ[state.selectedModel];
+      console.log(model);
     }
-    state.rotationStopped = !state.rotationStopped
+  }
+  state.rotationStopped = !state.rotationStopped;
+}
+debugObject.toggleRotation = toggleRotation;
+gui.add(debugObject, "toggleRotation");
 
+function toggleInspectMode() {
+  if (state.inspectMode) {
+    state.inspectMode = false;
+    this.innerHTML = "Inspect";
+    // if (!navigationElement.classList.contains("visible")) {
+    //     navigationElement.classList.add("visible");
+    //   }
+  } else {
+    state.inspectMode = true;
+    this.innerHTML = "Go back";
+    // if (navigationElement.classList.contains("visible")) {
+    //     navigationElement.classList.remove("visible");
+    //   }
+  }
+  toggleRotation();
 }
 
-gui.add(debugObject, 'toggleRotation')
+function enableTopView(e) {
+  console.log(state);
+  setCameraTopViewPosition();
+  console.log(state);
+  if (controlsElement.classList.contains("visible")) {
+    controlsElement.classList.remove("visible");
+  }
+  if (state.selectedModel) panels[state.selectedModel].classList.remove("visible");
+
+  state.selectedModel = null;
+  state.rotationStopped = false;
+  document.querySelector(".button--inspect").innerHTML = "Inspect";
+  state.inspectMode = false;
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  document
+    .querySelectorAll(".button--inspect")
+    .forEach((button) => button.addEventListener("click", toggleInspectMode));
+
+  document
+    .querySelectorAll(".button--look-around")
+    .forEach((button) => button.addEventListener("click", enableTopView));
+});
 
 /**
  * Animate
  */
-console.log(points);
 const clock = new THREE.Clock();
 const radiansPerSecond = 0.5;
 
@@ -676,7 +763,6 @@ const tick = () => {
   const delta = clock.getDelta();
   // Update controls
   controls.update();
-  // console.log(camera.position)
 
   // Update points only when the scene is ready
   if (sceneReady) {
@@ -694,7 +780,7 @@ const tick = () => {
 
       //Rotate
       const newPosition = point.position.clone();
-       const q = new THREE.Quaternion();
+      const q = new THREE.Quaternion();
       q.setFromEuler(modelsParams.rotations[point.model]);
       newPosition.applyQuaternion(q);
       newPosition.add(modelsParams.positions[point.model]);
@@ -740,9 +826,8 @@ const tick = () => {
   //Rotate
   for (let model of group.children) {
     const modelName = model.userData.groupName;
-    //console.log(model.userData.groupName)
-    if(state.selectedModel == modelName && state.rotationStopped){
-        continue
+    if (state.selectedModel == modelName && state.rotationStopped) {
+      continue;
     }
     model.rotation.z += radiansPerSecond * delta;
   }
