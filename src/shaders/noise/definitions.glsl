@@ -1,7 +1,10 @@
-#define PI 3.1415926535897932384626433832795
 
 uniform float uTime;
-uniform vec3 uBorderColor;
+uniform vec3 uColor1;
+uniform vec3 uColor2;
+uniform float uAmplitude;
+uniform float uFreq;
+uniform float uOffset;
 uniform vec3 uBackgroundColor;
 uniform float uSpeed;
 
@@ -53,19 +56,3 @@ float cnoise(vec2 P)
     return 2.3 * n_xy;
 }
 
-
-void main()
-{
-   /
-    //float prevStrength2 = step(0.9, sin(cnoise((vUv) * 50.0) * 20.0 + (uTime-2.0) * uSpeed) );
-    float prevStrength = step(0.9, sin(cnoise((vUv-0.001) * 50.0) * 20.0 + (uTime) * uSpeed) );
-    float strength = step(0.9, sin(cnoise(vUv * 50.0) * 20.0 + uTime * uSpeed) );
-        // Final color
-    // vec3 uvColor = vec3(1.0);;//vec3(vUv, 1.0);
-    vec3 mixedColor = mix(uBackgroundColor, uBorderColor, strength); 
-    mixedColor = mix(mixedColor, vec3(1.0), prevStrength); 
-    //mixedColor = mix(mixedColor, vec3(0.33), prevStrength2); 
-
-    //gl_FragColor = vec4(vec3(strength), 1.0);
-    gl_FragColor = vec4(mixedColor, 1.0);
-}

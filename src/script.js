@@ -6,10 +6,14 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 //import waterFragmentShader from "./shaders/water/fragment.glsl";
 import noiseVertexShader from "./shaders/noise/vertex.glsl";
 import noiseFragmentShader from "./shaders/noise/fragment.glsl";
-import { gsap } from "gsap";
+import noiseDefinitions from "./shaders/noise/definitions.glsl";
+import noiseFragmentPart from "./shaders/noise/fragment_part.glsl";
+import { gsap, Power3 } from "gsap";
 import * as dat from "dat.gui";
 import { Vector3 } from "three";
 import Stats from "three/examples/jsm/libs/stats.module";
+
+console.log(noiseFragmentPart);
 
 /**
  * Stats
@@ -138,154 +142,7 @@ const overlay = new THREE.Mesh(overlayGeometry, overlayMaterial);
 overlay.name = "overlay";
 scene.add(overlay);
 
-/**
- * Noise shader
- */
-debugObject.borderColor = "#186691";
-debugObject.backgroundColor = "#9bd8ff";
 
-gui.addColor(debugObject, "borderColor").onChange(() => {
-  noiseMaterial.uniforms.uBorderColor.value.set(debugObject.borderColor);
-});
-gui.addColor(debugObject, "backgroundColor").onChange(() => {
-  noiseMaterial.uniforms.uBackgroundColor.value.set(
-    debugObject.backgroundColor
-  );
-});
-
-const noiseMaterial = new THREE.ShaderMaterial({
-  vertexShader: noiseVertexShader,
-  fragmentShader: noiseFragmentShader,
-  uniforms: {
-    uTime: { value: 0 },
-    uBorderColor: { value: new THREE.Color(debugObject.borderColor) },
-    uBackgroundColor: { value: new THREE.Color(debugObject.backgroundColor) },
-    uSpeed: { value: 1.0 },
-  },
-  // side: THREE.DoubleSide
-});
-
-gui
-  .add(noiseMaterial.uniforms.uSpeed, "value")
-  .min(0)
-  .max(4)
-  .step(0.001)
-  .name("uSpeed");
-
-// Geometry
-//const geometry = new THREE.PlaneBufferGeometry(1, 1, 32, 32);
-
-// Mesh
-//const mesh = new THREE.Mesh(geometry, noiseMaterial);
-//scene.add(mesh)
-
-/**
- * Noise Material
- */
-// Geometry
-const waterGeometry = new THREE.PlaneBufferGeometry(2, 2, 512, 512);
-
-// Colors
-// debugObject.depthColor = "#186691";
-// debugObject.surfaceColor = "#9bd8ff";
-
-// gui.addColor(debugObject, "depthColor").onChange(() => {
-//   waterMaterial.uniforms.uDepthColor.value.set(debugObject.depthColor);
-// });
-// gui.addColor(debugObject, "surfaceColor").onChange(() => {
-//   waterMaterial.uniforms.uSurfaceColor.value.set(debugObject.surfaceColor);
-// });
-
-// // Material
-// const waterMaterial = new THREE.ShaderMaterial({
-//   vertexShader: waterVertexShader,
-//   fragmentShader: waterFragmentShader,
-//   uniforms: {
-//     uTime: { value: 0 },
-
-//     uBigWavesElevation: { value: 0.2 },
-//     uBigWavesFrequency: { value: new THREE.Vector2(4, 1.5) },
-//     uBigWavesSpeed: { value: 0.75 },
-
-//     uSmallWavesElevation: { value: 0.15 },
-//     uSmallWavesFrequency: { value: 3 },
-//     uSmallWavesSpeed: { value: 0.2 },
-//     uSmallIterations: { value: 4 },
-
-//     uDepthColor: { value: new THREE.Color(debugObject.depthColor) },
-//     uSurfaceColor: { value: new THREE.Color(debugObject.surfaceColor) },
-//     uColorOffset: { value: 0.08 },
-//     uColorMultiplier: { value: 5 },
-//   },
-// });
-
-// gui
-//   .add(waterMaterial.uniforms.uBigWavesElevation, "value")
-//   .min(0)
-//   .max(1)
-//   .step(0.001)
-//   .name("uBigWavesElevation");
-// gui
-//   .add(waterMaterial.uniforms.uBigWavesFrequency.value, "x")
-//   .min(0)
-//   .max(10)
-//   .step(0.001)
-//   .name("uBigWavesFrequencyX");
-// gui
-//   .add(waterMaterial.uniforms.uBigWavesFrequency.value, "y")
-//   .min(0)
-//   .max(10)
-//   .step(0.001)
-//   .name("uBigWavesFrequencyY");
-// gui
-//   .add(waterMaterial.uniforms.uBigWavesSpeed, "value")
-//   .min(0)
-//   .max(4)
-//   .step(0.001)
-//   .name("uBigWavesSpeed");
-
-// gui
-//   .add(waterMaterial.uniforms.uSmallWavesElevation, "value")
-//   .min(0)
-//   .max(1)
-//   .step(0.001)
-//   .name("uSmallWavesElevation");
-// gui
-//   .add(waterMaterial.uniforms.uSmallWavesFrequency, "value")
-//   .min(0)
-//   .max(30)
-//   .step(0.001)
-//   .name("uSmallWavesFrequency");
-// gui
-//   .add(waterMaterial.uniforms.uSmallWavesSpeed, "value")
-//   .min(0)
-//   .max(4)
-//   .step(0.001)
-//   .name("uSmallWavesSpeed");
-// gui
-//   .add(waterMaterial.uniforms.uSmallIterations, "value")
-//   .min(0)
-//   .max(5)
-//   .step(1)
-//   .name("uSmallIterations");
-
-// gui
-//   .add(waterMaterial.uniforms.uColorOffset, "value")
-//   .min(0)
-//   .max(1)
-//   .step(0.001)
-//   .name("uColorOffset");
-// gui
-//   .add(waterMaterial.uniforms.uColorMultiplier, "value")
-//   .min(0)
-//   .max(10)
-//   .step(0.001)
-//   .name("uColorMultiplier");
-
-// // // Mesh
-// const water = new THREE.Mesh(waterGeometry, metalMaterial)
-// water.rotation.x = - Math.PI * 0.5
-// scene.add(water)
 
 /**
  * Update all materials
@@ -334,29 +191,105 @@ const metalMaterial = new THREE.MeshPhysicalMaterial({
   side: THREE.DoubleSide,
 });
 
-// // Mesh
-// const plane = new THREE.Mesh(waterGeometry, metalMaterial)
-// plane.rotation.x = - Math.PI * 0.5
-// plane.position.y = -0.1
-// scene.add(plane)
 
-// Create cube render target
-//const cubeRenderTarget = new THREE.WebGLCubeRenderTarget( 128, { format: THREE.RGBFormat, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter } );
+const sphereGeometry = new THREE.SphereBufferGeometry(0.1, 32, 32);
+const sphereMaterial = new THREE.MeshStandardMaterial({
+  color: 0xfff,
+  roughness: 0.2,
+});
 
-// Create cube camera
-//var mirrorSphereCamera = new THREE.CubeCamera( 0.1, 5000, 512 );
-// mirrorCubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter;
-//scene.add( mirrorSphereCamera );
+debugObject.color1 = "#186691";
+debugObject.color2 = "#ffffff";
+debugObject.backgroundColor = "#9bd8ff";
 
-//
-//const sphereGeometry = new THREE.SphereBufferGeometry(0.3, 32, 32);
+sphereMaterial.userData = {
+    uTime: { value: 0 },
+    uColor1: { value: new THREE.Color(debugObject.color1) },
+    uColor2: { value: new THREE.Color(debugObject.color2) },
+    uBackgroundColor: { value: new THREE.Color(debugObject.backgroundColor) },
+    uSpeed: { value: 1.0 },
+    uFreq: { value: 50.0 },
+    uAmplitude: { value: 12.0 },
+    uOffset: { value: 0.01 },
+ }
 
-// const sphere = new THREE.Mesh(sphereGeometry, mirrorSphereMaterial);
+sphereMaterial.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+    .replace(/#include <uv_pars_vertex>/,
+        `
+        varying vec2 vUv;
+        `)
+    .replace(/#include <fog_vertex>/,
+        `
+        #include <fog_vertex>
+        vUv = uv;
+        `)
+
+    shader.fragmentShader = shader.fragmentShader
+    .replace(
+      /#include <common>/,
+      "#include <common> " + noiseDefinitions
+    )
+    .replace(
+      /vec4 diffuseColor.*;/, noiseFragmentPart
+    )
+    .replace(
+        /#include <metalnessmap_fragment>/, 
+        `
+        #include <metalnessmap_fragment>
+        metalnessFactor = vec4(mix(vec3(0.0), vec3(1.1), strength) , 1.0).r; 
+        `
+      );;
+
+
+    shader.uniforms = {...shader.uniforms, ...sphereMaterial.userData};
+    console.log('t', shader.uniforms)
+};
+gui
+  .add(sphereMaterial.userData.uSpeed, "value")
+  .min(0)
+  .max(4)
+  .step(0.001)
+  .name("uSpeed");
+gui
+  .add(sphereMaterial.userData.uOffset, "value")
+  .min(0)
+  .max(0.1)
+  .step(0.0001)
+  .name("uSpeed");
+  gui
+  .add(sphereMaterial.userData.uAmplitude, "value")
+  .min(0)
+  .max(100.0)
+  .step(1)
+  .name("uAmplitude");
+  gui
+  .add(sphereMaterial.userData.uFreq, "value")
+  .min(1)
+  .max(100.0)
+  .step(1)
+  .name("uFreq");
+
+
+gui.addColor(debugObject, "color1").onChange(() => {
+    sphereMaterial.userData.uColor1.value.set(debugObject.color1);
+});
+gui.addColor(debugObject, "color2").onChange(() => {
+    sphereMaterial.userData.uColor2.value.set(debugObject.color2);
+});
+gui.addColor(debugObject, "backgroundColor").onChange(() => {
+    sphereMaterial.userData.uBackgroundColor.value.set(
+    debugObject.backgroundColor
+  );
+});
+
+const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 // mirrorSphereCamera.position = sphere.position;
 // sphere.castShadow = false;
 // sphere.receiveShadow = true; //default
-// sphere.position.y = 0;
-// scene.add(sphere);
+sphere.position.y = 0;
+scene.add(sphere);
+
 
 /**
  * Background
@@ -444,7 +377,7 @@ const modelsParams = {
   quaternions: {},
   startRotationsZ: {},
   cameraPositions: {},
-  models: {}
+  models: {},
 };
 
 function findPositionsOnCircle(center, nPoints, radius) {
@@ -544,22 +477,22 @@ window.addEventListener("touchend", (event) => {
   mouse.y = -(event.changedTouches[0].clientY / sizes.height) * 2 + 1;
 });
 
-function animateCamera(targetPosition, targetPoint){
-    gsap.to(
-        {},
-        {
-          duration: 2,
-          onUpdate: function () {
-            camera.position.lerp(targetPosition, this.progress());
-            controls.update();
-            controls.target.lerp(targetPoint, this.progress());
-          },
-          onComplete: () => {
-            console.log("finished");
-          },
-          ease:"ease-in-out"
-        }
-      );
+function animateCamera(targetPosition, targetPoint) {
+  gsap.to(
+    {},
+    {
+      duration: 2,
+      onUpdate: function () {
+        camera.position.lerp(targetPosition, this.progress());
+        controls.update();
+        controls.target.lerp(targetPoint, this.progress());
+      },
+      onComplete: () => {
+        console.log("finished");
+      },
+      ease: "ease-in-out",
+    }
+  );
 }
 
 //click event
@@ -579,21 +512,19 @@ function handleClick(e) {
     if (state.selectedModel)
       panels[state.selectedModel].classList.remove("visible");
     if (controlsElement.classList.contains("visible")) {
-        controlsElement.classList.remove("visible");
-      }
+      controlsElement.classList.remove("visible");
+    }
 
-    // if (!navigationElement.classList.contains("visible")) {
-    //   navigationElement.classList.add("visible");
-    //}
     if (!controlsElement.classList.contains("visible")) {
-        setTimeout(()=> {controlsElement.classList.add("visible")
-        }, 1000);
-      }
+      setTimeout(() => {
+        controlsElement.classList.add("visible");
+      }, 1000);
+    }
     state.selectedModel = group;
     panels[state.selectedModel].classList.add("visible");
     const targetPosition = modelsParams.cameraPositions[group];
     const targetPoint = modelsParams.positions[group];
-    animateCamera(targetPosition, targetPoint)
+    animateCamera(targetPosition, targetPoint);
   }
 }
 window.addEventListener("touchend", handleClick);
@@ -643,13 +574,12 @@ if (sizes.height > sizes.width && sizes.width < 500) {
 }
 
 function setCameraTopViewPosition() {
-let  targetPosition = new THREE.Vector3(0.1, 0.7, 0);
+  let targetPosition = new THREE.Vector3(0.1, 0.7, 0);
   if (sizes.height > sizes.width && sizes.width < 500) {
     targetPosition = new THREE.Vector3(0.6, 0.7, 0.5);
   }
   const targetPoint = new THREE.Vector3(0, 0, 0);
-  animateCamera(targetPosition, targetPoint)
-
+  animateCamera(targetPosition, targetPoint);
 }
 
 // Controls
@@ -664,6 +594,69 @@ controls.saveState();
 //controls.autoRotateSpeed = 0.2;
 
 scene.add(camera);
+
+function getRotationAxisAndAngle(from, to) {
+  const distance = new THREE.Vector3(from.x, from.y, from.z).sub(to);
+
+  if (distance.length() < 0.01) {
+    //exit - don't do any rotation
+    //distance is too small for rotation to be numerically stable
+    console.log("no rotation");
+  }
+
+  //Don't actually need to call normalize for directionA - just doing it to indicate
+  //that this vector must be normalized.
+  const directionA = new Vector3(0, 1, 0).normalize();
+  const directionB = distance.clone().normalize();
+
+  const rotationAngle = Math.acos(directionA.dot(directionB));
+
+  if (Math.abs(rotationAngle) < 0.01) {
+    //exit - don't do any rotation
+    //angle is too small for rotation to be numerically stable
+    console.log("no rotation");
+  }
+
+  const rotationAxis = directionA.clone().cross(directionB).normalize();
+
+  //rotate object about rotationAxis by rotationAngle
+
+  return { axis: rotationAxis, angle: rotationAngle };
+}
+
+function launchModel(model) {
+  const pos = model.position.clone();
+  animateCamera(
+    pos.add(new THREE.Vector3(0.05, -0.2, 0.05)),
+    new THREE.Vector3(0, 1, 0)
+  );
+
+  //console.log(getRotationAxisAndAngle(model.rotation, new THREE.Vector3(0,1,0)))
+  //const rot = getRotationAxisAndAngle(model.rotation, new THREE.Vector3(-Math.PI,Math.PI,Math.PI))
+  //model.rotateOnAxis(rot.axis, rot.angle)
+  //model.rotation.set(0,0,0);
+  console.log(
+    model.rotation,
+    model.position,
+    model.position.clone().normalize()
+  );
+  model.rotateOnAxis(new THREE.Vector3(0, 1, 0), -Math.PI / 2);
+
+  gsap.to(model.position, {
+    duration: 2,
+    y: 10,
+    onUpdate: function () {},
+    onComplete: () => {
+      console.log("finished");
+    },
+    ease: Power3.easeIn,
+  });
+}
+
+debugObject.launchModel = () => {
+  launchModel(models[0]);
+};
+gui.add(debugObject, "launchModel");
 
 /**
  * Renderer
@@ -681,18 +674,6 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-/**
- * Colors
- */
-// const color = [
-//   {
-//     color: "66557c",
-//   },
-//   {
-//     color: "153944",
-//   },
-// ];
-// const tray = document.getElementById("js-tray-slide");
 
 function toggleRotation() {
   for (const model of models) {
@@ -733,7 +714,8 @@ function enableTopView(e) {
   if (controlsElement.classList.contains("visible")) {
     controlsElement.classList.remove("visible");
   }
-  if (state.selectedModel) panels[state.selectedModel].classList.remove("visible");
+  if (state.selectedModel)
+    panels[state.selectedModel].classList.remove("visible");
 
   state.selectedModel = null;
   state.rotationStopped = false;
@@ -820,8 +802,9 @@ const tick = () => {
 
   const elapsedTime = clock.getElapsedTime();
 
-  //waterMaterial.uniforms.uTime.value = elapsedTime;
-  noiseMaterial.uniforms.uTime.value = elapsedTime;
+  //material.uniforms.uTime.value = elapsedTime;
+  //sphere.material.uniforms.uTime.value = elapsedTime;
+  sphere.material.userData.uTime.value = elapsedTime;
 
   //Rotate
   for (let model of group.children) {
