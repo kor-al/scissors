@@ -1,9 +1,9 @@
 //ufreq 50
 //uappl 20
-float prevStrength = step(0.9, sin(cnoise((vUv-uOffset) * uFreq) * uAmplitude + uTime * uSpeed) );
-prevStrength = sin(cnoise((vUv-uOffset) * uFreq) * uAmplitude + uTime * uSpeed) ;
-float strength = step(0.9, sin(cnoise(vUv * uFreq) * uAmplitude + uTime * uSpeed) );
-strength = sin(cnoise(vUv * uFreq) * uAmplitude + uTime * uSpeed);
+//float prevStrength = step(0.3, sin(cnoise((vUv-uOffset) * uFreq) * uAmplitude + uTime * uSpeed) );
+float prevStrength = sin(cnoise((vUv-uOffset) * uFreq.x) * uAmplitude.x + uTime * uSpeed) ;
+//float strength = step(0.9, sin(cnoise(vUv * uFreq) * uAmplitude + uTime * uSpeed) );
+float strength = sin(cnoise(vUv * uFreq.y) * uAmplitude.y + uTime * uSpeed);
 // Final color
 // vec3 uvColor = vec3(1.0);;//vec3(vUv, 1.0);
 vec3 mixedColor = mix(uBackgroundColor, uColor1, strength); 

@@ -6,14 +6,11 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 //import waterFragmentShader from "./shaders/water/fragment.glsl";
 import noiseVertexShader from "./shaders/noise/vertex.glsl";
 import noiseFragmentShader from "./shaders/noise/fragment.glsl";
-import noiseDefinitions from "./shaders/noise/definitions.glsl";
-import noiseFragmentPart from "./shaders/noise/fragment_part.glsl";
+import {MagmaMaterial} from "./materials/magma.js"
 import { gsap, Power3 } from "gsap";
 import * as dat from "dat.gui";
-import { Vector3 } from "three";
 import Stats from "three/examples/jsm/libs/stats.module";
-
-console.log(noiseFragmentPart);
+import * as CANNON from "cannon-es";
 
 /**
  * Stats
@@ -104,7 +101,9 @@ window.addEventListener("resize", () => {
  */
 // Debug
 const gui = new dat.GUI();
-const debugObject = {};
+const sphereFolder = gui.addFolder('Sphere')
+const materialFolder1 = gui.addFolder('Material1')
+let  debugObject = {};
 debugObject.background = 0x0;
 
 // Canvas
@@ -141,8 +140,6 @@ const overlayMaterial = new THREE.ShaderMaterial({
 const overlay = new THREE.Mesh(overlayGeometry, overlayMaterial);
 overlay.name = "overlay";
 scene.add(overlay);
-
-
 
 /**
  * Update all materials
@@ -181,9 +178,7 @@ scene.environment = environmentMap;
 
 debugObject.envMapIntensity = 10;
 
-/**
- * Metal Material
- */
+
 const metalMaterial = new THREE.MeshPhysicalMaterial({
   metalness: 1,
   clearcoat: 1.0,
@@ -191,97 +186,51 @@ const metalMaterial = new THREE.MeshPhysicalMaterial({
   side: THREE.DoubleSide,
 });
 
+/**
+ * Sphere
+ */
+const sphereRadius = 0.1;
+const sphereGeometry = new THREE.SphereBufferGeometry(sphereRadius, 32, 32);
+const magmaMaterial = new MagmaMaterial();
+const sphereMaterial = magmaMaterial.getMaterial();
+magmaMaterial.addGui(sphereFolder)
 
-const sphereGeometry = new THREE.SphereBufferGeometry(0.1, 32, 32);
-const sphereMaterial = new THREE.MeshStandardMaterial({
-  color: 0xfff,
-  roughness: 0.2,
-});
+// sphereFolder
+//   .add(sphereMaterial.userData.uSpeed, "value")
+//   .min(0)
+//   .max(4)
+//   .step(0.001)
+//   .name("uSpeed");
+//   sphereFolder
+//   .add(sphereMaterial.userData.uOffset, "value")
+//   .min(0)
+//   .max(0.1)
+//   .step(0.0001)
+//   .name("uOffset");
+//   sphereFolder
+//   .add(sphereMaterial.userData.uAmplitude, "value")
+//   .min(0)
+//   .max(100.0)
+//   .step(1)
+//   .name("uAmplitude");
+//   sphereFolder
+//   .add(sphereMaterial.userData.uFreq, "value")
+//   .min(1)
+//   .max(100.0)
+//   .step(1)
+//   .name("uFreq");
 
-debugObject.color1 = "#186691";
-debugObject.color2 = "#ffffff";
-debugObject.backgroundColor = "#9bd8ff";
-
-sphereMaterial.userData = {
-    uTime: { value: 0 },
-    uColor1: { value: new THREE.Color(debugObject.color1) },
-    uColor2: { value: new THREE.Color(debugObject.color2) },
-    uBackgroundColor: { value: new THREE.Color(debugObject.backgroundColor) },
-    uSpeed: { value: 1.0 },
-    uFreq: { value: 50.0 },
-    uAmplitude: { value: 12.0 },
-    uOffset: { value: 0.01 },
- }
-
-sphereMaterial.onBeforeCompile = (shader) => {
-    shader.vertexShader = shader.vertexShader
-    .replace(/#include <uv_pars_vertex>/,
-        `
-        varying vec2 vUv;
-        `)
-    .replace(/#include <fog_vertex>/,
-        `
-        #include <fog_vertex>
-        vUv = uv;
-        `)
-
-    shader.fragmentShader = shader.fragmentShader
-    .replace(
-      /#include <common>/,
-      "#include <common> " + noiseDefinitions
-    )
-    .replace(
-      /vec4 diffuseColor.*;/, noiseFragmentPart
-    )
-    .replace(
-        /#include <metalnessmap_fragment>/, 
-        `
-        #include <metalnessmap_fragment>
-        metalnessFactor = vec4(mix(vec3(0.0), vec3(1.1), strength) , 1.0).r; 
-        `
-      );;
-
-
-    shader.uniforms = {...shader.uniforms, ...sphereMaterial.userData};
-    console.log('t', shader.uniforms)
-};
-gui
-  .add(sphereMaterial.userData.uSpeed, "value")
-  .min(0)
-  .max(4)
-  .step(0.001)
-  .name("uSpeed");
-gui
-  .add(sphereMaterial.userData.uOffset, "value")
-  .min(0)
-  .max(0.1)
-  .step(0.0001)
-  .name("uSpeed");
-  gui
-  .add(sphereMaterial.userData.uAmplitude, "value")
-  .min(0)
-  .max(100.0)
-  .step(1)
-  .name("uAmplitude");
-  gui
-  .add(sphereMaterial.userData.uFreq, "value")
-  .min(1)
-  .max(100.0)
-  .step(1)
-  .name("uFreq");
-
-
-gui.addColor(debugObject, "color1").onChange(() => {
-    sphereMaterial.userData.uColor1.value.set(debugObject.color1);
-});
-gui.addColor(debugObject, "color2").onChange(() => {
-    sphereMaterial.userData.uColor2.value.set(debugObject.color2);
-});
-gui.addColor(debugObject, "backgroundColor").onChange(() => {
-    sphereMaterial.userData.uBackgroundColor.value.set(
-    debugObject.backgroundColor
-  );
-});
+//   sphereFolder.addColor(debugObject, "color1").onChange(() => {
+//   sphereMaterial.userData.uColor1.value.set(debugObject.color1);
+// });
+// sphereFolder.addColor(debugObject, "color2").onChange(() => {
+//   sphereMaterial.userData.uColor2.value.set(debugObject.color2);
+// });
+// sphereFolder.addColor(debugObject, "backgroundColor").onChange(() => {
+//   sphereMaterial.userData.uBackgroundColor.value.set(
+//     debugObject.backgroundColor
+//   );
+// });
 
 const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 // mirrorSphereCamera.position = sphere.position;
@@ -289,7 +238,6 @@ const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 // sphere.receiveShadow = true; //default
 sphere.position.y = 0;
 scene.add(sphere);
-
 
 /**
  * Background
@@ -302,11 +250,16 @@ gui.addColor(debugObject, "background").onChange(() => {
   scene.fog = new THREE.Fog(debugObject.background, 0.3, 2);
 });
 
-const initMaterial = metalMaterial; //noiseMaterial;
+const steelMagmaMaterial = new MagmaMaterial();
+steelMagmaMaterial.uniforms.uAmplitude.value.y = 4.
+steelMagmaMaterial.uniforms.uFreq.value.y = 20.
+
+const initMaterial = steelMagmaMaterial.getMaterial(); //noiseMaterial;
+steelMagmaMaterial.addGui(materialFolder1)
 const initMaterialMap = [
   { objectID: "thumbBlade", material: initMaterial },
   { objectID: "fingerBlade", material: initMaterial },
-  { objectID: "screw", material: initMaterial },
+  //{ objectID: "screw", material: initMaterial },
 ];
 
 function assignMaterial(parent, type, mlt) {
@@ -314,9 +267,9 @@ function assignMaterial(parent, type, mlt) {
     if (o.isMesh) {
       console.log(o.name, type);
       if (o.name.includes(type)) {
-        //o.material = mlt;
+        o.material = mlt;
         o.ojectID = type;
-        o.material.envMap = environmentMap;
+        //o.material.envMap = environmentMap;
       }
     }
   });
@@ -424,7 +377,7 @@ for (let i = 0; i < modelsParams.files.length; i++) {
     }
 
     for (let obj of initMaterialMap) {
-      //assignMaterial(model, obj.objectID, obj.material);
+      assignMaterial(model, obj.objectID, obj.material);
     }
 
     group.add(model);
@@ -674,7 +627,6 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-
 function toggleRotation() {
   for (const model of models) {
     if (model.userData.groupName == state.selectedModel) {
@@ -732,6 +684,56 @@ window.addEventListener("DOMContentLoaded", () => {
     .querySelectorAll(".button--look-around")
     .forEach((button) => button.addEventListener("click", enableTopView));
 });
+
+/**
+ * Physics
+ */
+const objectsToUpdate = [];
+debugObject.simulatePhysics = false;
+gui.add(debugObject, "simulatePhysics");
+
+
+const world = new CANNON.World();
+world.broadphase = new CANNON.SAPBroadphase(world);
+world.allowSleep = true;
+world.gravity.set(0, -9.82, 0);
+
+// Default material
+const defaultMaterial = new CANNON.Material("default");
+const defaultContactMaterial = new CANNON.ContactMaterial(
+  defaultMaterial,
+  defaultMaterial,
+  {
+    friction: 0.1,
+    restitution: 0.7,
+  }
+);
+world.defaultContactMaterial = defaultContactMaterial;
+
+// Floor
+const floorShape = new CANNON.Plane();
+const floorBody = new CANNON.Body();
+floorBody.mass = 0;
+floorBody.addShape(floorShape);
+floorBody.position.y = -0.5;
+floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(-1, 0, 0), Math.PI * 0.499);
+world.addBody(floorBody);
+
+// Cannon.js body
+const shape = new CANNON.Sphere(sphereRadius);
+
+const body = new CANNON.Body({
+  mass: 1,
+  position: new CANNON.Vec3(0, 0, 0),
+  shape: shape,
+  material: defaultMaterial,
+});
+body.position.copy(sphere.position);
+world.addBody(body);
+
+
+// Save in objects
+objectsToUpdate.push({ mesh: sphere, body: body });
 
 /**
  * Animate
@@ -814,6 +816,19 @@ const tick = () => {
     }
     model.rotation.z += radiansPerSecond * delta;
   }
+
+  if(debugObject.simulatePhysics){
+
+  // Update physics
+    world.step(1 / 60, delta, 3)
+    
+    for(const object of objectsToUpdate)
+    {
+        object.mesh.position.copy(object.body.position)
+        object.mesh.quaternion.copy(object.body.quaternion)
+    }
+  }
+
 
   // Render
   renderer.render(scene, camera);
