@@ -4,10 +4,11 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 //import waterVertexShader from "./shaders/water/vertex.glsl";
 //import waterFragmentShader from "./shaders/water/fragment.glsl";
-import liquidVertexShader from "./shaders/liquid/vertex.glsl";
-import liquidFragmentShader from "./shaders/liquid/fragment.glsl";
+import bubbleVertexShader from "./shaders/metaballs/vertex.glsl";
+import bubbleFragmentShader from "./shaders/metaballs/fragment.glsl";
 import { MagmaMaterial } from "./materials/magma.js";
 import { FbmMaterial } from "./materials/fbm.js";
+import { MetaballsMaterial } from "./materials/metaballs.js";
 import { gsap, Power3 } from "gsap";
 import * as dat from "dat.gui";
 import Stats from "three/examples/jsm/libs/stats.module";
@@ -105,6 +106,7 @@ window.addEventListener("resize", () => {
 const gui = new dat.GUI();
 const sphereFolder = gui.addFolder("Sphere");
 const liquidFolder = gui.addFolder("LiquidMaterial");
+const metaballsFolder = gui.addFolder("MetaballsMaterial");
 const materialFolder2 = gui.addFolder("Material2");
 
 let debugObject = {};
@@ -207,7 +209,7 @@ const sphereRadius = 0.1;
 const sphereGeometry = new THREE.SphereBufferGeometry(sphereRadius, 32, 32);
 //const sphereGeometry = new THREE.TorusBufferGeometry( sphereRadius, sphereRadius/3., 16, 100 );
 const magmaMaterial = new MagmaMaterial();
-const sphereMaterial = magmaMaterial.getMaterial();
+let sphereMaterial = magmaMaterial.getMaterial();
 magmaMaterial.addGui(sphereFolder)
 
 const fbmMaterial = new FbmMaterial();
@@ -215,115 +217,37 @@ const liquidMaterial = fbmMaterial.getMaterial();
 fbmMaterial.addGui(liquidFolder)
 
 
-// debugObject.uColor1a = 0xf9ff00;
-// debugObject.uColor1b = 0xe03e;
-// debugObject.uColor2 = 0xce0031;
-// debugObject.uColor3 = 0x93ff;
-
-// const liquidMaterial = new THREE.ShaderMaterial({
+// const shaderMaterial = new THREE.ShaderMaterial({
 //   transparent: false,
 //   uniforms: {
 //     uTime: { value: 0 },
-//     uOctaves: { value: 6 },
 //     uScale: { value: 2.5 },
-//     uSpeed: { value: { x: 0.01, y: 0.05 } },
-//     uRotation: { value: { x: 1, y: 2 } },
-//     uDegreeWeights: { value: { x: 0.6, y: 0.2, z: 0.2 } },
-//     uColor1a: { value: new THREE.Color(debugObject.uColor1a) },
-//     uColor1b: { value: new THREE.Color(debugObject.uColor1b) },
-//     uColor2: { value: new THREE.Color(debugObject.uColor2) },
-//     uColor3: { value: new THREE.Color(debugObject.uColor3) },
+//     uSpeed: { value: { x: 0.01, y: 0.05 } }
 //   },
-//   vertexShader: liquidVertexShader,
-//   fragmentShader: liquidFragmentShader,
+//   vertexShader: bubbleVertexShader,
+//   fragmentShader: bubbleFragmentShader,
 // });
 
-// materialFolder2.addColor(debugObject, "uColor1a").onChange(() => {
-//   liquidMaterial.uniforms.uColor1a.value.set(
-//     new THREE.Color(debugObject.uColor1a)
-//   );
-// });
-
-// materialFolder2.addColor(debugObject, "uColor1b").onChange(() => {
-//   liquidMaterial.uniforms.uColor1b.value.set(
-//     new THREE.Color(debugObject.uColor1b)
-//   );
-// });
-
-// materialFolder2.addColor(debugObject, "uColor2").onChange(() => {
-//   liquidMaterial.uniforms.uColor2.value.set(
-//     new THREE.Color(debugObject.uColor2)
-//   );
-// });
-
-// materialFolder2.addColor(debugObject, "uColor3").onChange(() => {
-//   liquidMaterial.uniforms.uColor3.value.set(
-//     new THREE.Color(debugObject.uColor3)
-//   );
-// });
 
 // materialFolder2
-//   .add(liquidMaterial.uniforms.uOctaves, "value")
-//   .min(1)
-//   .max(5)
-//   .step(1)
-//   .name("uOctaves");
-
-// materialFolder2
-//   .add(liquidMaterial.uniforms.uScale, "value")
+//   .add(shaderMaterial.uniforms.uScale, "value")
 //   .min(1)
 //   .max(10)
 //   .step(0.5)
 //   .name("uScale");
 
 // materialFolder2
-//   .add(liquidMaterial.uniforms.uSpeed.value, "x")
+//   .add(shaderMaterial.uniforms.uSpeed.value, "x")
 //   .min(0)
 //   .max(0.1)
 //   .step(0.001)
 //   .name("uSpeed.1");
 
-// materialFolder2
-//   .add(liquidMaterial.uniforms.uSpeed.value, "y")
-//   .min(0)
-//   .max(0.1)
-//   .step(0.001)
-//   .name("uSpeed.2");
 
-// materialFolder2
-//   .add(liquidMaterial.uniforms.uRotation.value, "x")
-//   .min(-5)
-//   .max(5)
-//   .step(0.1)
-//   .name("uRotation.1");
+const metaballsMaterialGen = new MetaballsMaterial()
+const metaballsMaterial =  metaballsMaterialGen.getMaterial()
+metaballsMaterialGen.addGui(metaballsFolder)
 
-// materialFolder2
-//   .add(liquidMaterial.uniforms.uRotation.value, "y")
-//   .min(5)
-//   .max(5)
-//   .step(0.1)
-//   .name("uRotation.2");
-
-// materialFolder2
-//   .add(liquidMaterial.uniforms.uDegreeWeights.value, "x")
-//   .min(0)
-//   .max(5)
-//   .step(0.1)
-//   .name("uDegreeWeights x");
-
-// materialFolder2
-//   .add(liquidMaterial.uniforms.uDegreeWeights.value, "y")
-//   .min(0)
-//   .max(5)
-//   .step(0.1)
-//   .name("uDegreeWeights y");
-
-// materialFolder2
-//   .add(liquidMaterial.uniforms.uDegreeWeights.value, "z")
-//   .min(0)
-//   .max(5)
-//   .step(0.1)
-//   .name("uDegreeWeights z");
 
 const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 // mirrorSphereCamera.position = sphere.position;
@@ -418,9 +342,9 @@ let centerModel = null;
 const modelToMaterial = {
   'tailorShears':   
   { 
-    "thumbBlade": initMaterial ,
-   "fingerBlade": initMaterial ,
-    "screw": initMaterial 
+    "thumbBlade": liquidMaterial ,
+   "fingerBlade": liquidMaterial ,
+    "screw": liquidMaterial 
   },
   'hairShears' :
   { 
@@ -429,9 +353,9 @@ const modelToMaterial = {
    "screw": initMaterial 
   },
   'paperScissors' :   { 
-    "thumbBlade": initMaterial ,
-   "fingerBlade": initMaterial ,
-   "screw": initMaterial 
+    "thumbBlade": metaballsMaterial ,
+   "fingerBlade": metaballsMaterial ,
+   "screw": metaballsMaterial 
   },
 }
 
@@ -1005,8 +929,10 @@ const tick = () => {
   //material.uniforms.uTime.value = elapsedTime;
   //liquidMaterial.uniforms.uTime.value = elapsedTime;
   liquidMaterial.userData.uTime.value = elapsedTime;
+  metaballsMaterial.userData.uTime.value = elapsedTime;
 
   sphere.material.userData.uTime.value = elapsedTime;
+  //sphere.material.uniforms.uTime.value = elapsedTime;
 
   //Rotate
   for (let model of group.children) {
@@ -1024,7 +950,14 @@ const tick = () => {
     for (const object of objectsToUpdate) {
       object.mesh.position.copy(object.body.position);
       object.mesh.quaternion.copy(object.body.quaternion);
+      if (object.mesh.position.length() > 1.5){
+        object.mesh.geometry.dispose();
+        object.mesh.material.dispose();
+        scene.remove( object.mesh )
+        state.simulatePhysics = false;
+      }
     }
+
   }
 
   // Render
