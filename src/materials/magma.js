@@ -1,9 +1,14 @@
 import * as THREE from "three";
-import noiseDefinitions from "../shaders/noise/definitions.glsl";
-import noiseFragmentChunk from "../shaders/noise/fragmentChunk.glsl";
+import fragmentVariables from "../shaders/noise/fragmentVariables.glsl";
+import perlinNoiseFunctions from "../shaders/perlinNoise2d.glsl";
+import fragmentChunk from "../shaders/noise/fragmentChunk.glsl";
+import {ModifiedMaterial} from "./modifiedMaterial.js";
 
-export class MagmaMaterial {
+console.log('modifies', ModifiedMaterial)
+
+export class MagmaMaterial extends ModifiedMaterial {
   constructor() {
+    super();
     this.colors = {
       color1: "#3500ce",
       color2: "#3c09b2",
@@ -27,15 +32,17 @@ export class MagmaMaterial {
       color: 0xfff,
       roughness: this.params.roughness,
     });
+    this.setColorUniforms();
 
-    const colorUniforms = {
-      uColor1: { value: new THREE.Color(this.colors.color1) },
-      uColor2: { value: new THREE.Color(this.colors.color2) },
-      uBackgroundColor: {
-        value: new THREE.Color(this.colors.backgroundColor),
-      },
-    };
-    material.userData = { ...this.uniforms, ...colorUniforms };
+    // const colorUniforms = {
+    //   uColor1: { value: new THREE.Color(this.colors.color1) },
+    //   uColor2: { value: new THREE.Color(this.colors.color2) },
+    //   uBackgroundColor: {
+    //     value: new THREE.Color(this.colors.backgroundColor),
+    //   },
+    // };
+    // material.userData = { ...this.uniforms, ...colorUniforms };
+    material.userData = this.uniforms;
 
     material.onBeforeCompile = (shader) => {
       shader.vertexShader = shader.vertexShader
@@ -65,8 +72,8 @@ export class MagmaMaterial {
         );
 
       shader.fragmentShader = shader.fragmentShader
-        .replace(/#include <common>/, "#include <common> " + noiseDefinitions)
-        .replace(/vec4 diffuseColor.*;/, noiseFragmentChunk)
+        .replace(/#include <common>/, "#include <common> " + fragmentVariables + perlinNoiseFunctions)
+        .replace(/vec4 diffuseColor.*;/, fragmentChunk)
         .replace(
           /#include <metalnessmap_fragment>/,
           `
@@ -119,16 +126,6 @@ export class MagmaMaterial {
       .step(1)
       .name("uFreq.y");
 
-    folder.addColor(this.colors, "color1").onChange(() => {
-      this.material.userData.uColor1.value.set(this.colors.color1);
-    });
-    folder.addColor(this.colors, "color2").onChange(() => {
-      this.material.userData.uColor2.value.set(this.colors.color2);
-    });
-    folder.addColor(this.colors, "backgroundColor").onChange(() => {
-      this.material.userData.uBackgroundColor.value.set(
-        this.colors.backgroundColor
-      );
-    });
+      this.addColorGui(folder);
   }
 }

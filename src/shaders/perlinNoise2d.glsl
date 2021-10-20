@@ -1,15 +1,3 @@
-
-uniform float uTime;
-uniform vec3 uColor1;
-uniform vec3 uColor2;
-uniform vec2 uAmplitude;
-uniform vec2 uFreq;
-uniform float uOffset;
-uniform vec3 uBackgroundColor;
-uniform float uSpeed;
-
-varying vec2 vUv;
-
 //	Classic Perlin 2D Noise 
 //	by Stefan Gustavson
 //
@@ -55,4 +43,3 @@ float cnoise(vec2 P)
     float n_xy = mix(n_x.x, n_x.y, fade_xy.y);
     return 2.3 * n_xy;
 }
-
