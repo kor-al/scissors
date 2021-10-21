@@ -9,6 +9,8 @@ import bubbleFragmentShader from "./shaders/metaballs/fragment.glsl";
 import { MagmaMaterial } from "./materials/magma.js";
 import { FbmMaterial } from "./materials/fbm.js";
 import { MetaballsMaterial } from "./materials/metaballs.js";
+import { VoronoiMaterial } from "./materials/voronoi.js";
+import {VoronoiNoiseMaterial} from "./materials/voronoiNoise.js";
 import { gsap, Power3 } from "gsap";
 import * as dat from "dat.gui";
 import Stats from "three/examples/jsm/libs/stats.module";
@@ -107,6 +109,7 @@ const gui = new dat.GUI();
 const sphereFolder = gui.addFolder("Sphere");
 const liquidFolder = gui.addFolder("LiquidMaterial");
 const metaballsFolder = gui.addFolder("MetaballsMaterial");
+const voronoiFolder = gui.addFolder("VoronoiMaterial");
 const materialFolder2 = gui.addFolder("Material2");
 
 let debugObject = {};
@@ -212,9 +215,13 @@ const magmaMaterial = new MagmaMaterial();
 let sphereMaterial = magmaMaterial.getMaterial();
 magmaMaterial.addGui(sphereFolder)
 
-const fbmMaterial = new FbmMaterial();
-const liquidMaterial = fbmMaterial.getMaterial();
-fbmMaterial.addGui(liquidFolder)
+const liquidMaterialGen = new FbmMaterial();
+const liquidMaterial = liquidMaterialGen.getMaterial();
+liquidMaterialGen.addGui(liquidFolder)
+
+const voronoiMaterialGen = new VoronoiNoiseMaterial()
+const voronoiMaterial =  voronoiMaterialGen.getMaterial()
+voronoiMaterialGen.addGui(voronoiFolder)
 
 
 // const shaderMaterial = new THREE.ShaderMaterial({
@@ -248,6 +255,7 @@ const metaballsMaterialGen = new MetaballsMaterial()
 const metaballsMaterial =  metaballsMaterialGen.getMaterial()
 metaballsMaterialGen.addGui(metaballsFolder)
 
+sphereMaterial = voronoiMaterial;
 
 const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 // mirrorSphereCamera.position = sphere.position;
@@ -348,9 +356,9 @@ const modelToMaterial = {
   },
   'hairShears' :
   { 
-    "thumbBlade": initMaterial ,
-   "fingerBlade": initMaterial ,
-   "screw": initMaterial 
+    "thumbBlade": voronoiMaterial ,
+   "fingerBlade": voronoiMaterial ,
+   "screw": voronoiMaterial 
   },
   'paperScissors' :   { 
     "thumbBlade": metaballsMaterial ,

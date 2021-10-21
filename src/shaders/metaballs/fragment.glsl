@@ -17,9 +17,6 @@ void main() {
     vec2 st = vUv * uScale;
     vec3 color = vec3(0.);
 
-    // Scale
-    st *= 6.;
-
     // Tile the space
     vec2 i_st = floor(st);
     vec2 f_st = fract(st);

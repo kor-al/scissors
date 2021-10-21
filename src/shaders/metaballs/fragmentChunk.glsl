@@ -1,4 +1,8 @@
     vec2 st = vUv * uScale;
+
+    float t = uTime*uSpeed;
+
+    //st = cos(st* t*0.1) + st;
     vec3 color = vec3(0.);
 
     // Tile the space
@@ -15,7 +19,7 @@
             vec2 offset = random2(i_st + neighbor);
 
             // Animate the offset
-            offset = 0.5 + 0.5*sin(uTime*uSpeed + 6.2831*offset);
+            offset = 0.5 + 0.5*sin(t + 6.2831*offset);
 
             // Position of the cell
             vec2 pos = neighbor + offset - f_st;
