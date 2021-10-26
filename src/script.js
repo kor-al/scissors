@@ -4,28 +4,30 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 //import waterVertexShader from "./shaders/water/vertex.glsl";
 //import waterFragmentShader from "./shaders/water/fragment.glsl";
-import bubbleVertexShader from "./shaders/metaballs/vertex.glsl";
-import bubbleFragmentShader from "./shaders/metaballs/fragment.glsl";
+import particleVertexShader from "./shaders/particles/vertex.glsl";
+import particleFragmentShader from "./shaders/particles/fragment.glsl";
 import { MagmaMaterial } from "./materials/magma.js";
 import { FbmMaterial } from "./materials/fbm.js";
 import { MetaballsMaterial } from "./materials/metaballs.js";
 import { VoronoiMaterial } from "./materials/voronoi.js";
-import {VoronoiNoiseMaterial} from "./materials/voronoiNoise.js";
+import { VoronoiNoiseMaterial } from "./materials/voronoiNoise.js";
 import { gsap, Power3 } from "gsap";
 import * as dat from "dat.gui";
 import Stats from "three/examples/jsm/libs/stats.module";
 import * as CANNON from "cannon-es";
+import { WebGLMultisampleRenderTarget } from "three";
 
 /**
  * Stats
  */
 var stats = new Stats();
-stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
+stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
 document.body.appendChild(stats.dom);
 
 /**
  * Loaders
  */
+
 const loadingBarElement = document.querySelector(".loading-bar");
 
 let sceneReady = false;
@@ -48,7 +50,7 @@ const loadingManager = new THREE.LoadingManager(
 
     window.setTimeout(() => {
       sceneReady = true;
-      //panels[state.selectedModel].classList.add("visible");
+      welcomeElement.classList.remove("hidden");
     }, 2000);
   },
 
@@ -59,9 +61,48 @@ const loadingManager = new THREE.LoadingManager(
     loadingBarElement.style.transform = `scaleX(${progressRatio})`;
   }
 );
+
 const gltfLoader = new GLTFLoader(loadingManager);
 const cubeTextureLoader = new THREE.CubeTextureLoader(loadingManager);
 const textureLoader = new THREE.TextureLoader();
+
+/**
+ * Managing Experience
+ */
+
+function startExperience() {
+  state.started = true;
+  welcomeElement.classList.add("hidden");
+
+  gsap.to(controls.target, {
+    duration: 2,
+    y: 0,
+    delay: 0,
+    onComplete: () => {
+      controls.enabled = true;
+      welcomeElement.style.display = "none";
+      navigationElement.style.display = "block";
+    },
+  });
+}
+
+function completeExperience() {
+  if (choiceControlsElement.classList.contains("visible"))
+    choiceControlsElement.classList.remove("visible");
+  if (state.choicePanel) state.choicePanel.classList.remove("visible");
+  theEndElement.style.display = "block";
+  window.setTimeout(() => {
+    theEndElement.classList.add("visible");
+  }, 1000);
+  gsap.to(overlayMaterial.uniforms.uAlpha, {
+    duration: 1,
+    value: 1,
+    delay: 0.5,
+    onComplete: () => {
+      choiceNavElement.style.display = "none";
+    },
+  });
+}
 
 /**
  * Sizes
@@ -102,23 +143,42 @@ window.addEventListener("resize", () => {
 });
 
 /**
- * Base
+ * Debug
  */
-// Debug
 const gui = new dat.GUI();
 const sphereFolder = gui.addFolder("Sphere");
 const liquidFolder = gui.addFolder("LiquidMaterial");
 const metaballsFolder = gui.addFolder("MetaballsMaterial");
 const voronoiFolder = gui.addFolder("VoronoiMaterial");
-const materialFolder2 = gui.addFolder("Material2");
+const particlesFolder = gui.addFolder("Particles");
 
 let debugObject = {};
-debugObject.background = 0x0;
+debugObject.background = 0xc1426;
 
-// Canvas
+/**
+ * HTML Elements
+ */
+
 const canvas = document.querySelector("canvas.webgl");
+const welcomeElement = document.querySelector(".welcome");
+const theEndElement = document.querySelector(".the-end");
+const navigationElement = document.querySelector(".nav");
+//when all three models are available to inspect
+const advertisementNavElement = navigationElement.querySelector(
+  ".nav--advertisement"
+);
+const controlsElement = navigationElement.querySelector(
+  ".controls--advertisement"
+);
+//when one model is chosen as a final one
+const choiceNavElement = navigationElement.querySelector(".nav--choice");
+const choiceControlsElement =
+  navigationElement.querySelector(".controls--choice");
 
-// Scene
+/**
+ * Scene
+ */
+
 const scene = new THREE.Scene();
 
 /**
@@ -169,7 +229,7 @@ const updateAllMaterials = () => {
 };
 
 /**
- * Gradients
+ * Textures
  */
 //  const gradientTexture = textureLoader.load('./textures/gradients/5.jpg')
 //  const toonMaterial = new THREE.MeshToonMaterial()
@@ -179,120 +239,61 @@ const updateAllMaterials = () => {
 // toonMaterial.gradientMap = gradientTexture
 // toonMaterial.color = new THREE.Color('#ff0000')
 
+//const particleTexture1 = textureLoader.load('/textures/particles/5.png')
+//const particleTexture2 = textureLoader.load('/textures/particles/texture0.png')
+
 /**
  * Environment map
  */
+const environmentMapFolderPath = "./textures/environmentMaps/museum/"
+const pathExt = ".png"
 const environmentMap = cubeTextureLoader.load([
-  "./textures/environmentMaps/milkyway/px.png",
-  "./textures/environmentMaps/milkyway/nx.png",
-  "./textures/environmentMaps/milkyway/py.png",
-  "./textures/environmentMaps/milkyway/ny.png",
-  "./textures/environmentMaps/milkyway/pz.png",
-  "./textures/environmentMaps/milkyway/nz.png",
+  environmentMapFolderPath + "px" + pathExt,
+  environmentMapFolderPath + "nx"+ pathExt,
+  environmentMapFolderPath + "py"+ pathExt,
+  environmentMapFolderPath + "ny"+ pathExt,
+  environmentMapFolderPath + "pz"+ pathExt,
+  environmentMapFolderPath + "nz"+ pathExt,
 ]);
 
 environmentMap.encoding = THREE.sRGBEncoding;
 
-scene.background = environmentMap;
-scene.environment = environmentMap;
+debugObject.envMapIntensity = 5
+gui.add(debugObject, 'envMapIntensity').min(0).max(10).step(0.001).onChange(updateAllMaterials)
 
-debugObject.envMapIntensity = 10;
 
-const metalMaterial = new THREE.MeshPhysicalMaterial({
-  metalness: 1,
-  clearcoat: 1.0,
-  envMap: environmentMap,
-  side: THREE.DoubleSide,
-});
+// gui
+//   .add(environmentMap, "envMapIntensity")
+//   .min(1)
+//   .max(20)
+//   .step(1)
+//   .name("envMapIntensity");
+
+  scene.background = environmentMap;
+  scene.environment = environmentMap;
 
 /**
- * Sphere
+ * Materials
  */
-const sphereRadius = 0.1;
-const sphereGeometry = new THREE.SphereBufferGeometry(sphereRadius, 32, 32);
-//const sphereGeometry = new THREE.TorusBufferGeometry( sphereRadius, sphereRadius/3., 16, 100 );
 const magmaMaterial = new MagmaMaterial();
-let sphereMaterial = magmaMaterial.getMaterial();
-magmaMaterial.addGui(sphereFolder)
+const sphereMaterial = magmaMaterial.getMaterial();
+magmaMaterial.addGui(sphereFolder);
 
 const liquidMaterialGen = new FbmMaterial();
-const liquidMaterial = liquidMaterialGen.getMaterial();
-liquidMaterialGen.addGui(liquidFolder)
+var liquidMaterial = null
+// liquidMaterialGen.addGui(liquidFolder);
 
-const voronoiMaterialGen = new VoronoiNoiseMaterial()
-const voronoiMaterial =  voronoiMaterialGen.getMaterial()
-voronoiMaterialGen.addGui(voronoiFolder)
+const voronoiMaterialGen = new VoronoiNoiseMaterial();
+var voronoiMaterial = null
+// voronoiMaterialGen.addGui(voronoiFolder);
 
-
-// const shaderMaterial = new THREE.ShaderMaterial({
-//   transparent: false,
-//   uniforms: {
-//     uTime: { value: 0 },
-//     uScale: { value: 2.5 },
-//     uSpeed: { value: { x: 0.01, y: 0.05 } }
-//   },
-//   vertexShader: bubbleVertexShader,
-//   fragmentShader: bubbleFragmentShader,
-// });
-
-
-// materialFolder2
-//   .add(shaderMaterial.uniforms.uScale, "value")
-//   .min(1)
-//   .max(10)
-//   .step(0.5)
-//   .name("uScale");
-
-// materialFolder2
-//   .add(shaderMaterial.uniforms.uSpeed.value, "x")
-//   .min(0)
-//   .max(0.1)
-//   .step(0.001)
-//   .name("uSpeed.1");
-
-
-const metaballsMaterialGen = new MetaballsMaterial()
-const metaballsMaterial =  metaballsMaterialGen.getMaterial()
-metaballsMaterialGen.addGui(metaballsFolder)
-
-sphereMaterial = voronoiMaterial;
-
-const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-// mirrorSphereCamera.position = sphere.position;
-// sphere.castShadow = false;
-// sphere.receiveShadow = true; //default
-sphere.position.y = 0;
-scene.add(sphere);
-
-/**
- * Background
- */
-scene.background = new THREE.Color(debugObject.background);
-scene.fog = new THREE.Fog(debugObject.background, 0.5, 2);
-gui.addColor(debugObject, "background").onChange(() => {
-  //material.color.set(parameters.color)
-  scene.background = new THREE.Color(debugObject.background);
-  scene.fog = new THREE.Fog(debugObject.background, 0.3, 2);
-});
+const metaballsMaterialGen = new MetaballsMaterial();
+var metaballsMaterial = null
+// metaballsMaterialGen.addGui(metaballsFolder);
 
 const steelMagmaMaterial = new MagmaMaterial();
 steelMagmaMaterial.uniforms.uAmplitude.value.y = 4;
 steelMagmaMaterial.uniforms.uFreq.value.y = 20;
-
-// const initMaterial = steelMagmaMaterial.getMaterial(); //noiseMaterial;
-// steelMagmaMaterial.addGui(materialFolder1);
-
-const stdMaterial = new THREE.MeshStandardMaterial();
-stdMaterial.metalness = 0.2;
-stdMaterial.roughness = 0;
-stdMaterial.color = new THREE.Color(0x32a899);
-
-const initMaterial = liquidMaterial;
-const initMaterialMap = [
-  { objectID: "thumbBlade", material: initMaterial },
-  { objectID: "fingerBlade", material: initMaterial },
-  //{ objectID: "screw", material: initMaterial },
-];
 
 function assignMaterial(parent, type, mlt) {
   parent.traverse((o) => {
@@ -306,6 +307,29 @@ function assignMaterial(parent, type, mlt) {
     }
   });
 }
+
+/**
+ * Sphere
+ */
+const sphereRadius = 0.1;
+const sphereGeometry = new THREE.SphereBufferGeometry(sphereRadius, 32, 32);
+//const torusGeometry = new THREE.TorusBufferGeometry( sphereRadius, sphereRadius/3., 16, 100 );
+
+const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+sphere.castShadow = false;
+sphere.receiveShadow = false;
+sphere.position.y = 0;
+scene.add(sphere);
+
+/**
+ * Background
+ */
+scene.background = new THREE.Color(debugObject.background);
+scene.fog = new THREE.Fog(debugObject.background, 0.5, 2);
+gui.addColor(debugObject, "background").onChange(() => {
+  scene.background = new THREE.Color(debugObject.background);
+  scene.fog = new THREE.Fog(debugObject.background, 0.3, 2);
+});
 
 /**
  * Points of interest
@@ -347,24 +371,43 @@ const points = [
 
 const models = [];
 let centerModel = null;
-const modelToMaterial = {
-  'tailorShears':   
-  { 
-    "thumbBlade": liquidMaterial ,
-   "fingerBlade": liquidMaterial ,
-    "screw": liquidMaterial 
-  },
-  'hairShears' :
-  { 
-    "thumbBlade": voronoiMaterial ,
-   "fingerBlade": voronoiMaterial ,
-   "screw": voronoiMaterial 
-  },
-  'paperScissors' :   { 
-    "thumbBlade": metaballsMaterial ,
-   "fingerBlade": metaballsMaterial ,
-   "screw": metaballsMaterial 
-  },
+
+function mapModelToMaterials(modelName) {
+  let materials = {
+    thumbBlade: null,
+    fingerBlade: null,
+    screw: null,
+  };
+  switch (modelName) {
+    case "tailorShears":
+      liquidMaterial = liquidMaterialGen.getMaterial();
+      materials.thumbBlade = liquidMaterial;
+      materials.fingerBlade = liquidMaterial;
+      materials.screw = liquidMaterial;
+      liquidMaterialGen.addGui(liquidFolder);
+      break;
+
+    case "hairShears":
+      voronoiMaterial = voronoiMaterialGen.getMaterial();
+      materials.thumbBlade = voronoiMaterial;
+      materials.fingerBlade = voronoiMaterial;
+      materials.screw = voronoiMaterial;
+      voronoiMaterialGen.addGui(voronoiFolder);
+      break;
+
+    case "paperScissors":
+      metaballsMaterial = metaballsMaterialGen.getMaterial();
+      materials.thumbBlade = metaballsMaterial;
+      materials.fingerBlade = metaballsMaterial;
+      materials.screw = metaballsMaterial;
+      metaballsMaterialGen.addGui(metaballsFolder)
+      break;
+
+    default:
+      break;
+  }
+
+  return materials;
 }
 
 const modelsParams = {
@@ -408,7 +451,6 @@ const positionsOnCircleCamera = findPositionsOnCircle(
   modelsParams.radius + 0.25
 );
 
-console.log(positionsOnCircleCamera);
 const group = new THREE.Group();
 
 for (let i = 0; i < modelsParams.files.length; i++) {
@@ -426,10 +468,6 @@ for (let i = 0; i < modelsParams.files.length; i++) {
       //model.rotation.y = Math.PI / 12;
     } else {
       model.rotation.y = (i * Math.PI) / 3;
-    }
-
-    for (let obj of initMaterialMap) {
-      //assignMaterial(model, obj.objectID, obj.material);
     }
 
     group.add(model);
@@ -455,9 +493,13 @@ scene.add(group);
  */
 
 const state = {
+  started: false, //if experience has started
   selectedModel: null, //current model in focus
   rotationStopped: false,
   finallySelectedModel: null, //model that is selected via button
+  rotateGroup: false,  //rotate models around the center 
+  rotateCentralModel: false,  //rotate the central model
+  rotateSphere: true
 };
 
 /**
@@ -465,7 +507,26 @@ const state = {
  */
 const panels = {};
 for (const modelName of modelsParams.names) {
-  panels[modelName] = document.querySelector("." + modelName);
+  panels[modelName] = advertisementNavElement.querySelector("." + modelName);
+}
+
+//switch navigation blocks from Advertisement to Choice
+function toggleNavigationElement() {
+  advertisementNavElement.style.display = "none";
+  choiceNavElement.style.display = "block";
+  state.choicePanel = choiceNavElement.querySelector(
+    "." + state.finallySelectedModel
+  );
+
+  if (choiceControlsElement.classList.contains("visible")) {
+    controlsElement.classList.remove("visible");
+  }
+  if (!choiceControlsElement.classList.contains("visible")) {
+    setTimeout(() => {
+      state.choicePanel.classList.add("visible");
+      choiceControlsElement.classList.add("visible");
+    }, 1000);
+  }
 }
 
 /**
@@ -502,8 +563,6 @@ function animateCamera(targetPosition, targetPoint) {
 }
 
 //click event
-const navigationElement = document.querySelector(".nav");
-const controlsElement = navigationElement.querySelector(".controls");
 
 function handleClick(e) {
   // Cast a ray from the mouse and handle events
@@ -561,15 +620,6 @@ gui
   .step(0.1)
   .name("lightIntensity");
 
-  const light = new THREE.AmbientLight( 0x404040 , 1.); // soft white light
-  scene.add( light );
-
-  gui
-  .add(light, "intensity")
-  .min(0)
-  .max(10)
-  .step(0.1)
-  .name("ambientLightIntensity");
 
 /**
  * Camera
@@ -578,15 +628,9 @@ gui
 const camera = new THREE.PerspectiveCamera(
   75,
   sizes.width / sizes.height,
-  0.001,
-  100
+  0.001,  //near
+  2 //far
 );
-//camera.position.set(0.1, 0.2, 0.1);
-// camera.position.set(
-//   positionsOnCircleCamera[0].x,
-//   0.2,
-//   positionsOnCircleCamera[0].z
-// );
 
 if (sizes.height > sizes.width && sizes.width < 500) {
   //mobile view
@@ -594,6 +638,7 @@ if (sizes.height > sizes.width && sizes.width < 500) {
 } else {
   camera.position.set(0, 0.5, 0.5); //above
 }
+
 
 function setCameraTopViewPosition() {
   let targetPosition = new THREE.Vector3(0, 0.5, 0.5);
@@ -606,14 +651,16 @@ function setCameraTopViewPosition() {
 
 // Controls
 const controls = new OrbitControls(camera, canvas);
+controls.maxDistance = 1.
 controls.enableDamping = true;
 //controls.enablePan =false;
 controls.rotateSpeed = 0.5;
-controls.target.set(0, 0, 0);
 controls.saveState();
-//controls.target.set(positionsOnCircle[0].x, 0, positionsOnCircle[0].z);
 //controls.autoRotate = true;
 //controls.autoRotateSpeed = 0.2;
+controls.target.set(0, 0.7, 0); //then animate to look down
+controls.enabled = false;
+// controls.target.set(0, 0, 0);//lookdown
 
 scene.add(camera);
 
@@ -646,39 +693,8 @@ function getRotationAxisAndAngle(from, to) {
   return { axis: rotationAxis, angle: rotationAngle };
 }
 
-function launchModel(model) {
-  const pos = model.position.clone();
-  animateCamera(
-    pos.add(new THREE.Vector3(0.05, -0.2, 0.05)),
-    new THREE.Vector3(0, 1, 0)
-  );
 
-  //console.log(getRotationAxisAndAngle(model.rotation, new THREE.Vector3(0,1,0)))
-  //const rot = getRotationAxisAndAngle(model.rotation, new THREE.Vector3(-Math.PI,Math.PI,Math.PI))
-  //model.rotateOnAxis(rot.axis, rot.angle)
-  //model.rotation.set(0,0,0);
-  console.log(
-    model.rotation,
-    model.position,
-    model.position.clone().normalize()
-  );
-  model.rotateOnAxis(new THREE.Vector3(0, 1, 0), -Math.PI / 2);
 
-  gsap.to(model.position, {
-    duration: 2,
-    y: 10,
-    onUpdate: function () {},
-    onComplete: () => {
-      console.log("finished");
-    },
-    ease: Power3.easeIn,
-  });
-}
-
-debugObject.launchModel = () => {
-  launchModel(models[0]);
-};
-gui.add(debugObject, "launchModel");
 
 /**
  * Renderer
@@ -740,33 +756,34 @@ function enableTopView() {
 
   state.selectedModel = null;
   state.rotationStopped = false;
-  document.querySelector(".button--inspect").innerHTML = "Inspect";
+  controlsElement.querySelector(".button--inspect").innerHTML = "Inspect";
   state.inspectMode = false;
 }
 
-
-
 function chooseModel(e) {
   state.finallySelectedModel = state.selectedModel;
-  controls.autoRotate = true;
+  //controls.autoRotate = true;
+  state.rotateGroup = true;
   enableTopView(e);
   window.setTimeout(() => {
+    state.rotateSphere = false;
     state.simulatePhysics = true;
+    toggleNavigationElement(); //turn off previous navigation and turn on new one
   }, 500);
 
   for (const model of models) {
     if (model.userData.groupName == state.finallySelectedModel) {
       centerModel = model.clone();
-      const materials = modelToMaterial[state.finallySelectedModel]
-      for (var meshName in  materials){
-        console.log(meshName)
+      const materials = mapModelToMaterials(state.finallySelectedModel);
+      for (var meshName in materials) {
+        console.log(meshName);
         assignMaterial(centerModel, meshName, materials[meshName]);
       }
       //assignMaterial(centerModel, obj.objectID, obj.material);
-      centerModel.position.set(0, 2., 0);
+      centerModel.position.set(0, 2, 0);
       centerModel.rotation.set(0, 0, 0);
-      centerModel.rotation.x = -Math.PI/ 2;
-      centerModel.scale.set(5.,5.,5.);
+      centerModel.rotation.x = -Math.PI / 2;
+      centerModel.scale.set(5, 5, 5);
       scene.add(centerModel);
     }
     gsap.to(model.scale, {
@@ -774,41 +791,207 @@ function chooseModel(e) {
       x: 1,
       y: 1,
       z: 1,
-    onUpdate: function() {
-      //do nothing for now
-    },
-    ease: "ease-in-out",
+      onUpdate: function () {
+        //do nothing for now
+      },
+      ease: "ease-in-out",
     });
-  
   }
 
   gsap.to(centerModel.position, {
+    delay: 1,
     duration: 5,
     x: 0,
-	  y: 0,
-	  z: 0,
-	onUpdate: function() {
-		//do nothing for now
-	},
-  ease: "ease-in-out",
+    y: 0,
+    z: 0,
+    onUpdate: function () {
+      //do nothing for now
+      state.rotateCentralModel = true
+    },
+    ease: "ease-in-out",
   });
-
-
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  document
-    .querySelectorAll(".button--inspect")
-    .forEach((button) => button.addEventListener("click", toggleInspectMode));
+  controlsElement
+    .querySelector(".button--inspect")
+    .addEventListener("click", toggleInspectMode);
+
+  controlsElement
+    .querySelector(".button--look-around")
+    .addEventListener("click", enableTopView);
+
+  controlsElement
+    .querySelector(".button--choose")
+    .addEventListener("click", chooseModel);
+
+  choiceControlsElement
+    .querySelector(".button--blink")
+    .addEventListener("click", completeExperience);
 
   document
-    .querySelectorAll(".button--look-around")
-    .forEach((button) => button.addEventListener("click", enableTopView));
-
-  document
-    .querySelectorAll(".button--choose")
-    .forEach((button) => button.addEventListener("click", chooseModel));
+    .querySelector(".button--start")
+    .addEventListener("click", startExperience);
 });
+
+/**
+ * Particles
+ */
+const parameters = {};
+parameters.count = 200;
+parameters.size = 10;
+parameters.radiusOutside = 0.5;
+parameters.radiusInside = 0.3;
+parameters.minRadius = 0.04;
+parameters.center = { x: 0.1, y: 0, z: 0 };
+parameters.insideColor = "#ffffff";
+parameters.outsideColor = "#190ac1";
+
+const particleSystem = {
+  geometry: null,
+  material: null,
+  particles: null,
+  particleTexture: null,
+};
+
+function approximateGaussianRand(a, b) {
+  var rand = 0;
+  var n = 5;
+
+  for (var i = 0; i < n; i += 1) {
+    rand += Math.random();
+  }
+  rand = rand / n;
+  return rand * (b - a) + a;
+}
+
+const generateParticles = (particleSystem) => {
+  if (particleSystem.particles !== null) {
+    particleSystem.geometry.dispose();
+    particleSystem.material.dispose();
+    scene.remove(particleSystem.particles);
+  }
+
+  /**
+   * Geometry
+   */
+  particleSystem.geometry = new THREE.BufferGeometry();
+
+  const positions = new Float32Array(parameters.count * 3);
+  const colors = new Float32Array(parameters.count * 3);
+  const scales = new Float32Array(parameters.count * 1);
+  const insideColor = new THREE.Color(parameters.insideColor);
+  const outsideColor = new THREE.Color(parameters.outsideColor);
+
+  for (let i = 0; i < parameters.count; i++) {
+    const i3 = i * 3;
+
+    const angle = i;
+    const radius =
+      Math.random() * (parameters.radiusOutside - parameters.radiusInside) +
+      parameters.radiusInside;
+
+    positions[i3] = Math.cos(angle) * radius;
+    positions[i3 + 1] = approximateGaussianRand(0, 0.2);
+    positions[i3 + 2] = Math.sin(angle) * radius;
+
+    // Scale
+    scales[i] = Math.random();
+
+    // Color
+    const mixedColor = insideColor.clone();
+    mixedColor.lerp(
+      outsideColor,
+      (radius - parameters.radiusInside) /
+        (parameters.radiusOutside - parameters.radiusInside)
+    );
+
+    colors[i3] = mixedColor.r;
+    colors[i3 + 1] = mixedColor.g;
+    colors[i3 + 2] = mixedColor.b;
+  }
+
+  particleSystem.geometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(positions, 3)
+  );
+  particleSystem.geometry.setAttribute(
+    "aScale",
+    new THREE.BufferAttribute(scales, 1)
+  );
+  particleSystem.geometry.setAttribute(
+    "color",
+    new THREE.BufferAttribute(colors, 3)
+  );
+
+  /**
+   * Material
+   */
+  particleSystem.material = new THREE.ShaderMaterial({
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexColors: true,
+    uniforms: {
+      uTime: { value: 0 },
+      uSize: { value: parameters.size * renderer.getPixelRatio() },
+      uCenter: { value: parameters.center },
+    },
+    vertexShader: particleVertexShader,
+    fragmentShader: particleFragmentShader,
+  });
+
+  if (particleSystem.particleTexture) {
+    particleSystem.material.uniforms.alphaMap = {
+      type: "t",
+      value: particleSystem.particleTexture,
+    };
+  }
+
+  /**
+   * Points
+   */
+  particleSystem.particles = new THREE.Points(
+    particleSystem.geometry,
+    particleSystem.material
+  );
+  scene.add(particleSystem.particles);
+};
+
+particlesFolder
+  .add(parameters, "count")
+  .min(10)
+  .max(1000)
+  .step(50)
+  .onFinishChange(() => generateParticles(particleSystem));
+particlesFolder
+  .add(parameters, "size")
+  .min(10)
+  .max(100)
+  .step(10)
+  .onFinishChange(() => generateParticles(particleSystem));
+particlesFolder
+  .add(parameters, "radiusInside")
+  .min(0)
+  .max(0.4)
+  .step(0.01)
+  .onFinishChange(() => generateParticles(particleSystem));
+particlesFolder
+  .add(parameters, "radiusOutside")
+  .min(0.2)
+  .max(0.8)
+  .step(0.01)
+  .onFinishChange(() => generateParticles(particleSystem));
+particlesFolder
+  .addColor(parameters, "insideColor")
+  .onFinishChange(() => generateParticles(particleSystem));
+particlesFolder
+  .addColor(parameters, "outsideColor")
+  .onFinishChange(() => generateParticles(particleSystem));
+
+/**
+ * Generate particles
+ */
+generateParticles(particleSystem);
 
 /**
  * Physics
@@ -843,8 +1026,8 @@ floorBody.position.y = -0.5;
 
 var quatX = new CANNON.Quaternion();
 var quatY = new CANNON.Quaternion();
-quatX.setFromAxisAngle(new CANNON.Vec3(-1,0,0), Math.PI*0.51);
-quatY.setFromAxisAngle(new CANNON.Vec3(0,-1,0), Math.PI*0.2);
+quatX.setFromAxisAngle(new CANNON.Vec3(-1, 0, 0), Math.PI * 0.51);
+quatY.setFromAxisAngle(new CANNON.Vec3(0, -1, 0), Math.PI * 0.2);
 var quat = quatY.mult(quatX);
 quat.normalize();
 floorBody.quaternion.copy(quat);
@@ -871,6 +1054,8 @@ objectsToUpdate.push({ mesh: sphere, body: body });
 const clock = new THREE.Clock();
 const radiansPerSecond = 0.5;
 
+startExperience();
+
 const tick = () => {
   stats.begin();
 
@@ -879,7 +1064,7 @@ const tick = () => {
   controls.update();
 
   // Update points only when the scene is ready
-  if (sceneReady) {
+  if (sceneReady & state.started) {
     //Go through each point
     for (const point of points) {
       //skip points that are irrelevant for the selected model OR points that are far away
@@ -892,7 +1077,7 @@ const tick = () => {
         continue;
       }
 
-      //Rotate
+      //Rotate a model
       const newPosition = point.position.clone();
       const q = new THREE.Quaternion();
       q.setFromEuler(modelsParams.rotations[point.model]);
@@ -936,13 +1121,13 @@ const tick = () => {
 
   //material.uniforms.uTime.value = elapsedTime;
   //liquidMaterial.uniforms.uTime.value = elapsedTime;
-  liquidMaterial.userData.uTime.value = elapsedTime;
-  metaballsMaterial.userData.uTime.value = elapsedTime;
+  //liquidMaterial.userData.uTime.value = elapsedTime;
+  //metaballsMaterial.userData.uTime.value = elapsedTime;
 
   sphere.material.userData.uTime.value = elapsedTime;
   //sphere.material.uniforms.uTime.value = elapsedTime;
 
-  //Rotate
+  //Rotate eaqch model
   for (let model of group.children) {
     const modelName = model.userData.groupName;
     if (state.selectedModel == modelName && state.rotationStopped) {
@@ -951,6 +1136,11 @@ const tick = () => {
     model.rotation.z += radiansPerSecond * delta;
   }
 
+  if (state.rotateGroup)  group.rotation.y += 0.005;
+  if(state.rotateCentralModel) centerModel.rotation.z += 0.005
+  if(state.rotateSphere) sphere.rotation.y += 0.005
+
+
   if (state.simulatePhysics) {
     // Update physics
     world.step(1 / 60, delta, 3);
@@ -958,15 +1148,17 @@ const tick = () => {
     for (const object of objectsToUpdate) {
       object.mesh.position.copy(object.body.position);
       object.mesh.quaternion.copy(object.body.quaternion);
-      if (object.mesh.position.length() > 1.5){
+      if (object.mesh.position.length() > 1.5) {
         object.mesh.geometry.dispose();
         object.mesh.material.dispose();
-        scene.remove( object.mesh )
+        scene.remove(object.mesh);
         state.simulatePhysics = false;
       }
     }
-
   }
+
+  // Update material
+  particleSystem.material.uniforms.uTime.value = elapsedTime;
 
   // Render
   renderer.render(scene, camera);

@@ -36,7 +36,6 @@ export class FbmMaterial extends ModifiedMaterial {
     });
     this.setColorUniforms();
 
-
     material.userData = this.uniforms;
 
     material.onBeforeCompile = (shader) => {
@@ -64,7 +63,6 @@ export class FbmMaterial extends ModifiedMaterial {
                 metalnessFactor = vec4(mix(vec3(0.0), vec3(1.1), clamp(f*f,0.0,1.0)) , 1.0).r; 
                 `
         );
-        console.log(shader.fragmentShader)
       shader.uniforms = { ...shader.uniforms, ...material.userData };
     };
 

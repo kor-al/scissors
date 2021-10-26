@@ -61,9 +61,8 @@ export class VoronoiNoiseMaterial extends ModifiedMaterial {
           /#include <metalnessmap_fragment>/,
           `
                 #include <metalnessmap_fragment>
-                metalnessFactor = vec4(mix(vec3(0.), vec3(1.0), length(F)) , 1.0).r; 
-                //roughnessFactor = vec4( mix(vec3(1.0), vec3(0.), min(facets, roughness)) , 1.0).r; 
-
+                metalnessFactor = vec4(mix(vec3(1.), vec3(0.0), facets) , 1.0).r;  //length(F)
+                roughnessFactor = vec4( mix(vec3(0.), vec3(1.0), facets) , 1.0).r; 
                 `
         );
       shader.uniforms = { ...shader.uniforms, ...material.userData };

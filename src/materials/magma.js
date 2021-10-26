@@ -4,7 +4,6 @@ import perlinNoiseFunctions from "../shaders/perlinNoise2d.glsl";
 import fragmentChunk from "../shaders/noise/fragmentChunk.glsl";
 import {ModifiedMaterial} from "./modifiedMaterial.js";
 
-console.log('modifies', ModifiedMaterial)
 
 export class MagmaMaterial extends ModifiedMaterial {
   constructor() {
@@ -22,7 +21,7 @@ export class MagmaMaterial extends ModifiedMaterial {
       uOffset: { value: 0 },
     };
     this.params = {
-      roughness: 0.1,
+      roughness: 0.3,
     };
     this.material = null;
   }
@@ -78,7 +77,8 @@ export class MagmaMaterial extends ModifiedMaterial {
           /#include <metalnessmap_fragment>/,
           `
                 #include <metalnessmap_fragment>
-                metalnessFactor = vec4(mix(vec3(0.0), vec3(1.1), strength) , 1.0).r; 
+                metalnessFactor = vec4(mix(vec3(0.), vec3(1.), strength) , 1.0).r; 
+                roughnessFactor = vec4(mix(vec3(0.6), vec3(1.), prevStrength) , 1.0).r; 
                 `
         );
 
