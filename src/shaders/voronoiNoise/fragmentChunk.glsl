@@ -1,6 +1,6 @@
     vec3 color = vec3(0.0);
     vec2 st = vUv * uScale;
-    float t = uSpeed * uTime;
+    float t = uSpeed * uTime/10.;
     //st = dot(sin(st + uTime), cos(st + uTime)) + exp(cos(st + uTime));
     //roses
     //st = dot(sin(st + t), 6.*cos(st + t)) + exp(cos(st + t));

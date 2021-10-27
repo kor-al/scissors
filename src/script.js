@@ -123,15 +123,15 @@ window.addEventListener("resize", () => {
 
   //Update models
   if (sizes.height > sizes.width) {
-    for (const model of models) {
-      console.log(model.userData.groupName);
+    //mobile
+    for (const modelName in models) {
+      const model = models[modelName];
       model.rotation.x = -Math.PI / 2;
       model.rotation.y = Math.PI / 12;
     }
   } else {
-    for (let i = 0; i < models.length; i++) {
-      const model = models[i];
-      console.log(model.userData.groupName);
+    for (let i = 0; i < modelsParams.names.length; i++) {
+      const model = models[modelsParams.names[i]];
       model.rotation.x = 0;
       model.rotation.y = (i * Math.PI) / 3;
     }
@@ -146,14 +146,30 @@ window.addEventListener("resize", () => {
  * Debug
  */
 const gui = new dat.GUI();
-const sphereFolder = gui.addFolder("Sphere");
+const perlinFolder = gui.addFolder("PerlinMaterial");
 const liquidFolder = gui.addFolder("LiquidMaterial");
 const metaballsFolder = gui.addFolder("MetaballsMaterial");
 const voronoiFolder = gui.addFolder("VoronoiMaterial");
 const particlesFolder = gui.addFolder("Particles");
 
 let debugObject = {};
-debugObject.background = 0xc1426;
+debugObject.background = 0x90919;
+
+/**
+ * State
+ */
+
+const state = {
+  started: false, //if experience has started
+  selectedModel: null, //(name) current model in focus
+  rotationStopped: false, //regarding an indicidual rotation
+  rotateSphere: true,
+  // after the choice is made
+  finallySelectedModel: null, //(name) of the model that is selected via button
+  centralMaterial: "perlin", // material of the central object
+  rotateGroup: false, //rotate models around the center
+  rotateCentralModel: false, //rotate the central model
+};
 
 /**
  * HTML Elements
@@ -245,22 +261,26 @@ const updateAllMaterials = () => {
 /**
  * Environment map
  */
-const environmentMapFolderPath = "./textures/environmentMaps/museum/"
-const pathExt = ".png"
+const environmentMapFolderPath = "./textures/environmentMaps/museum/";
+const pathExt = ".png";
 const environmentMap = cubeTextureLoader.load([
   environmentMapFolderPath + "px" + pathExt,
-  environmentMapFolderPath + "nx"+ pathExt,
-  environmentMapFolderPath + "py"+ pathExt,
-  environmentMapFolderPath + "ny"+ pathExt,
-  environmentMapFolderPath + "pz"+ pathExt,
-  environmentMapFolderPath + "nz"+ pathExt,
+  environmentMapFolderPath + "nx" + pathExt,
+  environmentMapFolderPath + "py" + pathExt,
+  environmentMapFolderPath + "ny" + pathExt,
+  environmentMapFolderPath + "pz" + pathExt,
+  environmentMapFolderPath + "nz" + pathExt,
 ]);
 
 environmentMap.encoding = THREE.sRGBEncoding;
 
-debugObject.envMapIntensity = 5
-gui.add(debugObject, 'envMapIntensity').min(0).max(10).step(0.001).onChange(updateAllMaterials)
-
+debugObject.envMapIntensity = 5;
+gui
+  .add(debugObject, "envMapIntensity")
+  .min(0)
+  .max(10)
+  .step(0.001)
+  .onChange(updateAllMaterials);
 
 // gui
 //   .add(environmentMap, "envMapIntensity")
@@ -269,37 +289,37 @@ gui.add(debugObject, 'envMapIntensity').min(0).max(10).step(0.001).onChange(upda
 //   .step(1)
 //   .name("envMapIntensity");
 
-  scene.background = environmentMap;
-  scene.environment = environmentMap;
+scene.background = environmentMap;
+scene.environment = environmentMap;
 
 /**
  * Materials
  */
-const magmaMaterial = new MagmaMaterial();
-const sphereMaterial = magmaMaterial.getMaterial();
-magmaMaterial.addGui(sphereFolder);
+const perlinMaterialGen = new MagmaMaterial();
+const perlinMaterial = perlinMaterialGen.getMaterial();
+perlinMaterialGen.addGui(perlinFolder);
 
 const liquidMaterialGen = new FbmMaterial();
-var liquidMaterial = null
-// liquidMaterialGen.addGui(liquidFolder);
+var liquidMaterial = liquidMaterialGen.getMaterial();
+liquidMaterialGen.addGui(liquidFolder);
 
 const voronoiMaterialGen = new VoronoiNoiseMaterial();
-var voronoiMaterial = null
-// voronoiMaterialGen.addGui(voronoiFolder);
+var voronoiMaterial = voronoiMaterialGen.getMaterial();
+voronoiMaterialGen.addGui(voronoiFolder);
 
 const metaballsMaterialGen = new MetaballsMaterial();
-var metaballsMaterial = null
-// metaballsMaterialGen.addGui(metaballsFolder);
+var metaballsMaterial = metaballsMaterialGen.getMaterial();
+metaballsMaterialGen.addGui(metaballsFolder);
 
-const steelMagmaMaterial = new MagmaMaterial();
-steelMagmaMaterial.uniforms.uAmplitude.value.y = 4;
-steelMagmaMaterial.uniforms.uFreq.value.y = 20;
+// const steelMagmaMaterial = new MagmaMaterial();
+// steelMagmaMaterial.uniforms.uAmplitude.value.y = 4;
+// steelMagmaMaterial.uniforms.uFreq.value.y = 20;
 
-function assignMaterial(parent, type, mlt) {
+function assignMaterial(parent, mlt, type = null) {
   parent.traverse((o) => {
     if (o.isMesh) {
       console.log(o.name, type);
-      if (o.name.includes(type)) {
+      if (type === null || (type != null && o.name.includes(type))) {
         o.material = mlt;
         o.ojectID = type;
         //o.material.envMap = environmentMap;
@@ -308,6 +328,22 @@ function assignMaterial(parent, type, mlt) {
   });
 }
 
+function assignMaterialToCenterModel(materialName) {
+  const material = materialNameToMaterial[materialName];
+  assignMaterial(centerModel, material);
+}
+
+gui
+  .add(state, "centralMaterial", {
+    "Perlin Noise": "perlin",
+    "Voronoi Noise": "voronoi",
+    "FBM Liquid": "liquid",
+    "Voronoi Metaballs": "metaballs",
+  })
+  .onFinishChange((name) => {
+    assignMaterialToCenterModel(name);
+  });
+
 /**
  * Sphere
  */
@@ -315,7 +351,7 @@ const sphereRadius = 0.1;
 const sphereGeometry = new THREE.SphereBufferGeometry(sphereRadius, 32, 32);
 //const torusGeometry = new THREE.TorusBufferGeometry( sphereRadius, sphereRadius/3., 16, 100 );
 
-const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+const sphere = new THREE.Mesh(sphereGeometry, perlinMaterial);
 sphere.castShadow = false;
 sphere.receiveShadow = false;
 sphere.position.y = 0;
@@ -369,63 +405,39 @@ const points = [
  * Models
  */
 
-const models = [];
-let centerModel = null;
+const models = {};
+let centerModel = sphere;
 
-function mapModelToMaterials(modelName) {
-  let materials = {
-    thumbBlade: null,
-    fingerBlade: null,
-    screw: null,
-  };
-  switch (modelName) {
-    case "tailorShears":
-      liquidMaterial = liquidMaterialGen.getMaterial();
-      materials.thumbBlade = liquidMaterial;
-      materials.fingerBlade = liquidMaterial;
-      materials.screw = liquidMaterial;
-      liquidMaterialGen.addGui(liquidFolder);
-      break;
+const materialNameToMaterial = {
+  perlin: perlinMaterial,
+  liquid: liquidMaterial,
+  voronoi: voronoiMaterial,
+  metaballs: metaballsMaterial,
+};
 
-    case "hairShears":
-      voronoiMaterial = voronoiMaterialGen.getMaterial();
-      materials.thumbBlade = voronoiMaterial;
-      materials.fingerBlade = voronoiMaterial;
-      materials.screw = voronoiMaterial;
-      voronoiMaterialGen.addGui(voronoiFolder);
-      break;
-
-    case "paperScissors":
-      metaballsMaterial = metaballsMaterialGen.getMaterial();
-      materials.thumbBlade = metaballsMaterial;
-      materials.fingerBlade = metaballsMaterial;
-      materials.screw = metaballsMaterial;
-      metaballsMaterialGen.addGui(metaballsFolder)
-      break;
-
-    default:
-      break;
-  }
-
-  return materials;
-}
+const modelToMaterial = {
+  tailorShears: liquidMaterial,
+  hairShears: voronoiMaterial,
+  paperScissors: metaballsMaterial,
+  sphere: perlinMaterial,
+};
 
 const modelsParams = {
+  //to position models around the center
   center: { x: 0, z: 0 },
   radius: 0.3,
+  //to load models
   files: [
     "./models/tailorShears.glb",
     "./models/hairShears.glb",
     "./models/paperScissors.glb",
   ],
+  //names of the models
   names: ["tailorShears", "hairShears", "paperScissors"],
-  //cameraPosition: { x: 0.5, y: 0.2, z: 0 },//{ x: 0.6, y: -0.1, z: 0 },
-  positions: {},
-  rotations: {},
-  quaternions: {},
-  startRotationsZ: {},
-  cameraPositions: {},
-  models: {},
+  //to rotate in the inpect mode
+  fixedRotationZ: {}, //starting Z rotations for the models (for the "inspect" mode)
+  //to position camera
+  cameraPositions: {}, //camera position for each model
 };
 
 function findPositionsOnCircle(center, nPoints, radius) {
@@ -471,11 +483,8 @@ for (let i = 0; i < modelsParams.files.length; i++) {
     }
 
     group.add(model);
-    models.push(model);
-    modelsParams.positions[model.userData.groupName] = model.position;
-    modelsParams.rotations[model.userData.groupName] = model.rotation;
-    modelsParams.quaternions[model.userData.groupName] = model.quaternion;
-    modelsParams.startRotationsZ[model.userData.groupName] = model.rotation.z;
+    models[model.userData.groupName] = model;
+    modelsParams.fixedRotationZ[model.userData.groupName] = model.rotation.z;
     modelsParams.cameraPositions[model.userData.groupName] = new THREE.Vector3(
       positionsOnCircleCamera[i].x,
       0.2,
@@ -487,20 +496,6 @@ for (let i = 0; i < modelsParams.files.length; i++) {
 }
 //group.rotation.z = -Math.PI / 8;
 scene.add(group);
-
-/**
- * State
- */
-
-const state = {
-  started: false, //if experience has started
-  selectedModel: null, //current model in focus
-  rotationStopped: false,
-  finallySelectedModel: null, //model that is selected via button
-  rotateGroup: false,  //rotate models around the center 
-  rotateCentralModel: false,  //rotate the central model
-  rotateSphere: true
-};
 
 /**
  * Panels
@@ -567,7 +562,7 @@ function animateCamera(targetPosition, targetPoint) {
 function handleClick(e) {
   // Cast a ray from the mouse and handle events
   raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(models, true);
+  const intersects = raycaster.intersectObjects(Object.values(models), true);
   let group = intersects.length
     ? intersects[0].object.parent.userData.groupName ||
       intersects[0].object.userData.groupName
@@ -588,7 +583,7 @@ function handleClick(e) {
     state.selectedModel = group;
     panels[state.selectedModel].classList.add("visible");
     const targetPosition = modelsParams.cameraPositions[group];
-    const targetPoint = modelsParams.positions[group];
+    const targetPoint = models[group].position;
     animateCamera(targetPosition, targetPoint);
   }
 }
@@ -620,7 +615,6 @@ gui
   .step(0.1)
   .name("lightIntensity");
 
-
 /**
  * Camera
  */
@@ -628,7 +622,7 @@ gui
 const camera = new THREE.PerspectiveCamera(
   75,
   sizes.width / sizes.height,
-  0.001,  //near
+  0.001, //near
   2 //far
 );
 
@@ -638,7 +632,6 @@ if (sizes.height > sizes.width && sizes.width < 500) {
 } else {
   camera.position.set(0, 0.5, 0.5); //above
 }
-
 
 function setCameraTopViewPosition() {
   let targetPosition = new THREE.Vector3(0, 0.5, 0.5);
@@ -651,7 +644,7 @@ function setCameraTopViewPosition() {
 
 // Controls
 const controls = new OrbitControls(camera, canvas);
-controls.maxDistance = 1.
+controls.maxDistance = 1;
 controls.enableDamping = true;
 //controls.enablePan =false;
 controls.rotateSpeed = 0.5;
@@ -693,9 +686,6 @@ function getRotationAxisAndAngle(from, to) {
   return { axis: rotationAxis, angle: rotationAngle };
 }
 
-
-
-
 /**
  * Renderer
  */
@@ -713,19 +703,10 @@ renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 function toggleRotation() {
-  for (const model of models) {
-    if (model.userData.groupName == state.selectedModel) {
-      console.log(model.userData.groupName);
-      console.log(modelsParams.rotations[model.userData.groupName]);
-      //model.rotation.x = modelsParams.rotations[state.selectedModel].x
-      model.rotation.z = modelsParams.startRotationsZ[state.selectedModel];
-      console.log(model);
-    }
-  }
+  models[state.selectedModel].rotation.z =
+    modelsParams.fixedRotationZ[state.selectedModel];
   state.rotationStopped = !state.rotationStopped;
 }
-debugObject.toggleRotation = toggleRotation;
-gui.add(debugObject, "toggleRotation");
 
 function toggleInspectMode() {
   if (state.inspectMode) {
@@ -771,21 +752,18 @@ function chooseModel(e) {
     toggleNavigationElement(); //turn off previous navigation and turn on new one
   }, 500);
 
-  for (const model of models) {
-    if (model.userData.groupName == state.finallySelectedModel) {
+  for (const modelName in models) {
+    const model = models[modelName];
+    if (modelName == state.finallySelectedModel) {
       centerModel = model.clone();
-      const materials = mapModelToMaterials(state.finallySelectedModel);
-      for (var meshName in materials) {
-        console.log(meshName);
-        assignMaterial(centerModel, meshName, materials[meshName]);
-      }
-      //assignMaterial(centerModel, obj.objectID, obj.material);
+      assignMaterial(centerModel, modelToMaterial[state.finallySelectedModel]);
       centerModel.position.set(0, 2, 0);
       centerModel.rotation.set(0, 0, 0);
       centerModel.rotation.x = -Math.PI / 2;
       centerModel.scale.set(5, 5, 5);
       scene.add(centerModel);
     }
+
     gsap.to(model.scale, {
       duration: 5,
       x: 1,
@@ -806,7 +784,7 @@ function chooseModel(e) {
     z: 0,
     onUpdate: function () {
       //do nothing for now
-      state.rotateCentralModel = true
+      state.rotateCentralModel = true;
     },
     ease: "ease-in-out",
   });
@@ -998,7 +976,6 @@ generateParticles(particleSystem);
  */
 const objectsToUpdate = [];
 state.simulatePhysics = false;
-gui.add(state, "simulatePhysics");
 
 const world = new CANNON.World();
 world.broadphase = new CANNON.SAPBroadphase(world);
@@ -1080,16 +1057,19 @@ const tick = () => {
       //Rotate a model
       const newPosition = point.position.clone();
       const q = new THREE.Quaternion();
-      q.setFromEuler(modelsParams.rotations[point.model]);
+      q.setFromEuler(models[point.model].rotation);
       newPosition.applyQuaternion(q);
-      newPosition.add(modelsParams.positions[point.model]);
+      newPosition.add(models[point.model].position);
 
       // Get 2D screen position
       const screenPosition = newPosition.clone();
       screenPosition.project(camera);
       // Set the raycaster
       raycaster.setFromCamera(screenPosition, camera);
-      const intersects = raycaster.intersectObjects(scene.children, true);
+      const intersects = raycaster.intersectObjects(
+        models[state.selectedModel].children,
+        true
+      );
       // No intersect found
       if (intersects.length === 0) {
         // Show
@@ -1124,10 +1104,10 @@ const tick = () => {
   //liquidMaterial.userData.uTime.value = elapsedTime;
   //metaballsMaterial.userData.uTime.value = elapsedTime;
 
-  sphere.material.userData.uTime.value = elapsedTime;
+  centerModel.material.userData.uTime.value = elapsedTime;
   //sphere.material.uniforms.uTime.value = elapsedTime;
 
-  //Rotate eaqch model
+  //Rotate each model
   for (let model of group.children) {
     const modelName = model.userData.groupName;
     if (state.selectedModel == modelName && state.rotationStopped) {
@@ -1136,10 +1116,9 @@ const tick = () => {
     model.rotation.z += radiansPerSecond * delta;
   }
 
-  if (state.rotateGroup)  group.rotation.y += 0.005;
-  if(state.rotateCentralModel) centerModel.rotation.z += 0.005
-  if(state.rotateSphere) sphere.rotation.y += 0.005
-
+  if (state.rotateGroup) group.rotation.y += 0.005;
+  if (state.rotateSphere) centerModel.rotation.y += 0.005;
+  else if (state.rotateCentralModel) centerModel.rotation.z += 0.005;
 
   if (state.simulatePhysics) {
     // Update physics
