@@ -105,9 +105,18 @@ function startExperience() {
 }
 
 const endWordsList = {
-  tailorShears: "spleen",
-  hairShears: "liver",
-  paperScissors: "pancreas",
+  tailorShears: {
+    bodyPart: "lungs",
+    scissorsPurpose : "tailor shears"
+  },
+  hairShears: {
+    bodyPart: "spleen",
+    scissorsPurpose : "hair shears"
+  },
+  paperScissors: {
+    bodyPart: "liver",
+    scissorsPurpose : "paper scissors"
+  }
 };
 
 function completeExperience() {
@@ -116,7 +125,8 @@ function completeExperience() {
   if (state.choicePanel) state.choicePanel.classList.remove("visible");
   theEndElement.style.display = "block";
   if (state.finallySelectedModel) {
-    endWordElement.innerHTML = `${endWordsList[state.finallySelectedModel]}`;
+    endWordElement.innerHTML = `${endWordsList[state.finallySelectedModel].bodyPart}`;
+    endScissorsElement.innerHTML = `${endWordsList[state.finallySelectedModel].scissorsPurpose}`;
   }
   window.setTimeout(() => {
     theEndElement.classList.add("visible");
@@ -208,6 +218,7 @@ const pointsElement = document.querySelector(".points");
 const welcomeElement = document.querySelector(".welcome");
 const theEndElement = document.querySelector(".the-end");
 const endWordElement = document.querySelector("#the-end-word");
+const endScissorsElement = document.querySelector("#the-end-scissors");
 const navigationElement = document.querySelector(".nav--interaction");
 const helperElement = document.querySelector(".nav--helper");
 //when all three models are available to inspect
@@ -830,6 +841,7 @@ function chooseModel(e) {
   //controls.autoRotate = true;
   state.rotateGroup = true; //to have lights stable
   enableTopView(e);
+  hideHelper(); //in case it was not deleted previously
   window.setTimeout(() => {
     state.rotateSphere = false;
     state.simulatePhysics = true;
