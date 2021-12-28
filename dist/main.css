@@ -28,7 +28,7 @@ button {
   font-family: "Josefin Sans", sans-serif;
   cursor: pointer;
   background-color: transparent;
-  font-size: 1rem;
+  font-size: 0.9rem;
   padding: 0.5rem 1rem;
   border: none;
   color: white;
@@ -303,7 +303,7 @@ button:hover {
 }
 
 .nav--helper {
-    display: block;
+    display: none;
     opacity: 1;
     transition: opacity 500ms ease-in-out;
 }

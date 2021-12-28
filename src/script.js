@@ -86,6 +86,7 @@ const textureLoader = new THREE.TextureLoader();
 function startExperience() {
   state.started = true;
   welcomeElement.classList.add("hidden");
+  helperElement.style.display = "block";
   // pointsElement.classList.remove("hidden");
 
   gsap.to(controls.target, {
@@ -96,7 +97,7 @@ function startExperience() {
       controls.enabled = true;
       welcomeElement.style.display = "none";
       navigationElement.style.display = "block";
-      helperElement.style.display = "block";
+
       if (helperElement.classList.contains("hidden"))
         helperElement.classList.remove("hidden");
     },
