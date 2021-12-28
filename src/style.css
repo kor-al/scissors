@@ -1,28 +1,138 @@
-*
-{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-size: 100%;
 }
 
 html,
-body
-{
-    overflow: hidden;
-    color: white;
+body {
+  overflow: hidden;
+  background-color: black;
+  color: white;
+  font-family: "Josefin Sans", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 300;
 }
 
-.webgl
-{
-    position: fixed;
-    top: 0;
-    left: 0;
-    outline: none;
-    width: 100%;
-    height: 100%;
+h1 {
+  font-size: 1.5rem;
 }
 
-.loading-bar
+h2 {
+  font-size: 1.2rem;
+  padding-bottom: 1rem;
+}
+
+button {
+  font-family: "Josefin Sans", sans-serif;
+  cursor: pointer;
+  background-color: transparent;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  color: white;
+  border: 1px solid #ffffff77; 
+  border-radius: 3px;
+  transition: background-color ease-in-out 300ms;
+}
+
+button:hover {
+  /* background-color: #ffffff33; */
+}
+
+.button--start {
+  margin: 3rem auto;
+  display: block;
+  background-color: rgb(235, 235, 235);
+  color: black;
+  border: none;
+  border-radius: 3px;
+}
+
+.button--start:hover {
+  background-color: #b86cff;
+}
+
+.button{
+    position: relative;
+}
+
+.button::after{
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    /* background-color: #b86cff; */
+    position: absolute;
+    top:50%;
+    left:5px;
+    transform: translate(0,-50%);
+    transition: all 300ms ease-in-out;
+}
+
+.button:hover::after{
+    background-color: #b86cff; 
+}
+
+@media screen and (max-width: 600px) {
+  .button--start {
+    margin: 2rem auto;
+  }
+}
+
+.icon-eye {
+  width: 5rem;
+  /* height: 100%; */
+  /* max-width: 30%; */
+  /* margin: 1rem auto; */
+  /* display: block; */
+  position: absolute;
+  left: 50%;
+  top: 150%;
+  transform: translate(-50%, -50%);
+}
+
+@media screen and (max-width: 600px) {
+  .icon-eye {
+    top: 135%;
+  }
+}
+
+.icon-eye circle {
+  fill: white;
+}
+
+.button--start:hover + .icon-eye circle {
+  fill: #b86cff;
+  animation-name: move-down;
+  animation-duration: 4000ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes move-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(300%);
+    opacity: 0;
+  }
+}
+
+.webgl {
+  position: fixed;
+  top: 0;
+  left: 0;
+  outline: none;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* .loading-bar
 {
     position: absolute;
     top: 50%;
@@ -32,182 +142,219 @@ body
     transform: scaleX(0.3);
     transform-origin: top left;
     transition: transform 0.5s;
+} */
+
+.loading-bar {
+  position: absolute;
+  bottom: 0%;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  transition: opacity 1s;
 }
 
-.centerPanel{
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%,-50%);
-
-    opacity: 1;
-    transition: opacity 0.3s;
+.loading-bar__text {
+  position: absolute;
+  bottom: 0%;
+  right: 0%;
+  font-size: 3rem;
+  opacity: 0.5;
+  transition: opacity 1s;
+  padding: 1rem;
 }
 
-.centerPanel.hidden{
-    opacity: 0;
+/* #slider { 
+    transition: transform 0.001s;
+} */
+
+.loading-bar.ended {
+  opacity: 0;
+  /* transform: scaleX(0); */
+  /* transform-origin: 100% 0;
+    transition: transform 1.5s ease-in-out; */
 }
 
-.the-end{
-    display: none;
-    opacity: 0;;
-
+.loading-bar.hidden {
+  display: none;
 }
 
-.the-end.visible{
-    opacity: 1;
-    transition: opacity 0.3s;
+.centerPanel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 
-}
-
-.loading-bar.ended
-{
-    transform: scaleX(0);
-    transform-origin: 100% 0;
-    transition: transform 1.5s ease-in-out;
-}
-
-.point
-{
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    /* pointer-events: none; */
-}
-
-.point .label
-{
-    position: absolute;
-    top: -20px;
-    left: -20px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #00000050;
-    border: 1px solid #ffffff77;
-    font-family: Helvetica, Arial, sans-serif;
-    text-align: center;
-    line-height: 40px;
-    font-weight: 100;
-    font-size: 14px;
-    cursor: help;
-    transform: scale(0, 0);
-    transition: transform 0.3s;
-}
-
-.point .text
-{
-    position: absolute;
-    top: 30px;
-    left: -120px;
-    width: 200px;
-    padding: 20px;
-    border-radius: 4px;
-    background: #00000077;
-    border: 1px solid #ffffff77;
-    color: #ffffff;
-    line-height: 1.3em;
-    font-family: Helvetica, Arial, sans-serif;
-    font-weight: 100;
-    font-size: 14px;
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-}
-
-.point:hover .text
-{
-    opacity: 1;
-}
-
-.point.visible .label
-{
-    transform: scale(1, 1);
-}
-
-
-.controls{
-    position: absolute;
-}
-
-.nav{
-   position: absolute;
-    top: 70%;
-    left: 60%;
-    opacity: 1;
-    padding: 1rem;
-    /* pointer-events: none; */
-    display: none;
-}
-
-
-.nav--choice{
-    /* 
-    Only show when one model finally chosen
-     */
-     display: none;
-}
-
-
-.panel{
-    opacity: 0;
-    /* remove from the document flow */
-    position: absolute;
-    top: 0%;
-
-}
-
-
-.panel.visible{
-    opacity: 1;
-    /* return to the document flow */
-    position: relative; 
-    transition: opacity ease-in-out 1s;
-
-}
-
-.panel > p{
-    padding-bottom: 1rem;
-    border-radius: 4px;
-
-    color: #ffffff;
-    line-height: 1.3em;
-    font-family: Helvetica, Arial, sans-serif;
-    font-weight: 100;
-    font-size: 14px;
-    
-    pointer-events: none;
-}
-
-h2{
-    padding-bottom: 1rem;
-}
-
-.controls{
-    opacity: 0;
-}
-
-.controls.visible{
-    opacity: 1;
-    transition: opacity ease-in-out 1s;
-}
-
-button{
-    cursor:pointer;
-    background-color: transparent;
-    padding: 0.5rem 1rem;
-    color: white;
-    border: 1px solid #ffffff77;
-    transition: background-color ease-in-out 300ms;
-}
-
-button:hover{
-    background-color: #ffffff33;
+  opacity: 1;
+  transition: opacity 1s;
 }
 
 @media screen and (max-width: 600px) {
-    .nav{
-        top: 65%;
-        left: 0%;
-    }
+  .centerPanel {
+    left: 20%;
+    transform: translate(-12%, -50%);
   }
+}
+
+.centerPanel.hidden {
+  opacity: 0;
+}
+
+.the-end {
+  display: none;
+  opacity: 0;
+}
+
+.the-end.visible {
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+/* .points.hidden
+{
+    display: none;
+} */
+
+.point {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* pointer-events: none; */
+}
+
+.point .label {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #00000050;
+  border: 3px solid #6cff78;
+  font-family: Helvetica, Arial, sans-serif;
+  text-align: center;
+  line-height: 40px;
+  font-weight: 100;
+  font-size: 14px;
+  cursor: help;
+  transform: scale(0, 0);
+  transition: transform 0.3s;
+}
+
+.point .text {
+  position: absolute;
+  top: 30px;
+  left: -120px;
+  width: 200px;
+  padding: 20px;
+  border-radius: 4px;
+  background: #00000077;
+  border: 1px solid #ffffff77;
+  color: #ffffff;
+  line-height: 1.3em;
+  font-family: Helvetica, Arial, sans-serif;
+  font-weight: 100;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.point:hover .text {
+  opacity: 1;
+}
+
+.point.visible .label {
+  transform: scale(1, 1);
+}
+
+.controls {
+  position: absolute;
+}
+
+.nav {
+  position: fixed;
+  top: 70%;
+  left: 60%;
+  opacity: 1;
+  padding: 1rem;
+  /* pointer-events: none; */
+  display: none;
+  
+}
+
+@media screen and (max-width: 1000px) {
+  .nav {
+    left: 40%;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .nav {
+    top: 60%;
+    left: 0%;
+  }
+}
+
+.nav--choice {
+  /* 
+    Only show when one model finally chosen
+     */
+  display: none;
+}
+
+.nav--helper {
+    display: block;
+    opacity: 1;
+    transition: opacity 500ms ease-in-out;
+}
+
+.nav--helper.hidden {
+    opacity: 0;
+  }
+
+.nav--helper p {
+  margin-bottom: 1rem;
+}
+
+.panel {
+  opacity: 0;
+  /* remove from the document flow */
+  position: absolute;
+  top: 0%;
+}
+
+.panel--advertisement {
+}
+
+.panel__text {
+  /* margin-bottom: 0.5rem; */
+}
+
+.panel.visible {
+  opacity: 1;
+  /* return to the document flow */
+  position: relative;
+  transition: opacity ease-in-out 1s;
+}
+
+.panel > p {
+  padding-bottom: 1rem;
+  border-radius: 4px;
+
+  color: #ffffff;
+  line-height: 1.3em;
+  font-family: Helvetica, Arial, sans-serif;
+  font-weight: 100;
+  font-size: 14px;
+
+  pointer-events: none;
+}
+
+.controls {
+  opacity: 0;
+}
+
+.controls.visible {
+  opacity: 1;
+  transition: opacity ease-in-out 1s;
+}

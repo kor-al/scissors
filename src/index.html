@@ -3,61 +3,154 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@100;300;400;500;600;700&display=swap" rel="stylesheet">
     <title>Scissors Dance</title>
   </head>
   <body>
     <canvas class="webgl"></canvas>
-    <!-- <div class="controls">
-        <div id="js-tray" class="tray">
-            <div id="js-tray-slide" class="tray__slide"></div>
-            <input type="color" id="favcolor" name="favcolor" value="#ff0000">
-        </div>
-    </div> -->
 
-    <div class="loading-bar"></div>
+    <div class="loading-bar">
+      <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" id="svg" viewBox="100 0 700 400">
+        <path class="curve" id="curve" d="" style="fill: none; stroke: none; stroke-width: 1" pathLength="1" stroke-dasharray="1.0 0." />
+        <g id="slider">
+          <g>
+            <path class="st0" d="M13.7,3.4L-4-3.9c-0.3-0.3,1.1-6-2.8-8c-3.5-1.8-6.2-2-7.3,1.1c-0.9,2.6,0.9,4.6,3.7,5.7
+          c3.7,1.5,7.3,2.8,7.3,2.8l0.1,3.1c0,0.5,0.4,1,1,1.1l15.6,2.4C14,4.4,14.2,3.6,13.7,3.4z M-10-7.2c-1.1,0-2-0.9-2-2
+          c0-1.1,0.9-2,2-2s2,0.9,2,2C-7.9-8.1-8.8-7.2-10-7.2z M0.6,1.4C0.2,1.4-0.2,1-0.2,0.6s0.4-0.8,0.8-0.8s0.8,0.4,0.8,0.8
+          S1.1,1.4,0.6,1.4z" style="fill: #fff; stroke: none; "/>
+            <animateTransform id="anim1" attributeType="xml" attributeName="transform" type="rotate" from="10 0 0" to="-10 0 0" dur="0.2s" begin="0s; anim2.end" fill="freeze" />
+            <animateTransform id="anim2" attributeType="xml" attributeName="transform" type="rotate" from="-10 0 0" to="10 0 0" dur="0.2s" begin="anim1.end" fill="freeze" />
+          </g>
+          <g>
+            <path class="st0" d="M13.4-3.2L-2.1-0.9c-0.5,0.1-0.9,0.5-1,1.1l-0.1,3.1c0,0-3.6,1.4-7.3,2.8c-2.7,1.1-4.6,3.1-3.7,5.7
+          c1.2,3.1,3.8,2.9,7.3,1.1c3.9-2,2.5-7.7,2.8-8l17.7-7.3C14.2-2.6,14-3.3,13.4-3.2z M-7.9,10.3c0,1.1-0.9,2-2,2s-2-0.9-2-2
+          c0-1.1,0.9-2,2-2S-7.9,9.1-7.9,10.3z M1.4,0.5c0,0.4-0.4,0.8-0.8,0.8S-0.2,1-0.2,0.5s0.4-0.8,0.8-0.8S1.4,0.1,1.4,0.5z" style="fill: #fff; stroke: none; "/>
+            <animateTransform id="anim1" attributeType="xml" attributeName="transform" type="rotate" from="-10 0 0" to="10 0 0" dur="0.2s" begin="0s; anim2.end" fill="freeze" />
+            <animateTransform id="anim2" attributeType="xml" attributeName="transform" type="rotate" from="10 0 0" to="-10 0 0" dur="0.2s" begin="anim1.end" fill="freeze" />
+          </g>
+        </g>
+      
+      </svg> 
+      <div class="loading-bar__text">0%</div>
+    </div>
 
     <div class="centerPanel welcome hidden">
-      <p>Welcome text</p>
+      <p>
+        For a moment, you feel nothing. Physical world is shrinking somewhere on
+        the horizon of your perception.
+      </p>
+      </br>
+      <p>
+        There is a cloggy roundabout revolving somewhere inside of you.
+        Delve into it. Dive deep. Dig.
+      </p>
       <button class="button--start">Look Down</button>
+      <svg id="icon-eye" class="icon icon-eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 152.35 300">
+        <path d="M290.17,198.53l-8.23-5.31c-1.43-.84-2.84-1.73-4.29-2.53s-2.89-1.62-4.37-2.36q-4.44-2.24-9-4.16c-1.54-.59-3.05-1.25-4.6-1.8s-3.08-1.14-4.65-1.64-3.12-1-4.7-1.45L245.59,178l-4.79-1.1L236,176A173,173,0,0,0,216.43,174c-13.09-.66-26.55.1-39.32,4a91.33,91.33,0,0,0-34.42,19.45l.06-2.91a105.85,105.85,0,0,0,16.45,10.82A116.74,116.74,0,0,0,196.12,218a141,141,0,0,0,19.46,1.77,137.34,137.34,0,0,0,19.55-.92l2.44-.29,2.42-.38,2.43-.4,2.4-.48,2.41-.48,2.4-.56,2.39-.58,2.37-.66,2.37-.68,2.34-.76,2.36-.75,2.31-.86c.77-.29,1.56-.55,2.32-.86l2.29-.95c1.54-.59,3-1.3,4.54-2,3-1.39,6-2.91,8.85-4.56,1.47-.8,2.87-1.7,4.31-2.56l1-.61,1-.58C288.72,199.41,289.44,199,290.17,198.53Zm.7,0L289,200.38c-.63.62-1.37,1.35-2,1.88-1.32,1.06-2.59,2.21-3.95,3.22a95.53,95.53,0,0,1-8.44,5.8c-1.47.88-2.93,1.78-4.45,2.57s-3,1.62-4.58,2.34l-2.33,1.11-2.37,1-2.38,1-2.42.89-2.43.88-2.46.79-2.47.77-2.49.68-2.51.65-2.53.55-2.53.54-2.55.45a116.09,116.09,0,0,1-20.65,1.67,114.72,114.72,0,0,1-40.58-7.77,105.63,105.63,0,0,1-18.53-9.22,98.61,98.61,0,0,1-16.16-12.81l-1.68-1.62,1.74-1.29a133.41,133.41,0,0,1,36.15-18.64c12.81-4.39,26.32-7.47,40.11-7.72a99.94,99.94,0,0,1,20.56,1.77,106.58,106.58,0,0,1,19.82,5.75c1.61.62,3.18,1.31,4.76,2s3.09,1.51,4.63,2.26,3,1.65,4.51,2.48,2.91,1.82,4.36,2.73,2.82,1.94,4.2,2.94,2.68,2.12,4,3.17,2.54,2.28,3.81,3.41S289.8,197.39,290.87,198.54Z" 
+        style="fill: #fff; stroke: none;"
+        transform="translate(-138.52 -168.11)"/>
+        <circle cx="75.48" cy="26.89" r="13" style="stroke: none;"/>
+      </svg>
+      <!-- <p>
+        <svg id="icon-eye" class="icon icon-eye" data-name="Layer 1" width="10%" height="10%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 152.35 59.09">
+          <path d="M290.17,198.53l-8.23-5.31c-1.43-.84-2.84-1.73-4.29-2.53s-2.89-1.62-4.37-2.36q-4.44-2.24-9-4.16c-1.54-.59-3.05-1.25-4.6-1.8s-3.08-1.14-4.65-1.64-3.12-1-4.7-1.45L245.59,178l-4.79-1.1L236,176A173,173,0,0,0,216.43,174c-13.09-.66-26.55.1-39.32,4a91.33,91.33,0,0,0-34.42,19.45l.06-2.91a105.85,105.85,0,0,0,16.45,10.82A116.74,116.74,0,0,0,196.12,218a141,141,0,0,0,19.46,1.77,137.34,137.34,0,0,0,19.55-.92l2.44-.29,2.42-.38,2.43-.4,2.4-.48,2.41-.48,2.4-.56,2.39-.58,2.37-.66,2.37-.68,2.34-.76,2.36-.75,2.31-.86c.77-.29,1.56-.55,2.32-.86l2.29-.95c1.54-.59,3-1.3,4.54-2,3-1.39,6-2.91,8.85-4.56,1.47-.8,2.87-1.7,4.31-2.56l1-.61,1-.58C288.72,199.41,289.44,199,290.17,198.53Zm.7,0L289,200.38c-.63.62-1.37,1.35-2,1.88-1.32,1.06-2.59,2.21-3.95,3.22a95.53,95.53,0,0,1-8.44,5.8c-1.47.88-2.93,1.78-4.45,2.57s-3,1.62-4.58,2.34l-2.33,1.11-2.37,1-2.38,1-2.42.89-2.43.88-2.46.79-2.47.77-2.49.68-2.51.65-2.53.55-2.53.54-2.55.45a116.09,116.09,0,0,1-20.65,1.67,114.72,114.72,0,0,1-40.58-7.77,105.63,105.63,0,0,1-18.53-9.22,98.61,98.61,0,0,1-16.16-12.81l-1.68-1.62,1.74-1.29a133.41,133.41,0,0,1,36.15-18.64c12.81-4.39,26.32-7.47,40.11-7.72a99.94,99.94,0,0,1,20.56,1.77,106.58,106.58,0,0,1,19.82,5.75c1.61.62,3.18,1.31,4.76,2s3.09,1.51,4.63,2.26,3,1.65,4.51,2.48,2.91,1.82,4.36,2.73,2.82,1.94,4.2,2.94,2.68,2.12,4,3.17,2.54,2.28,3.81,3.41S289.8,197.39,290.87,198.54Z" 
+          style="fill: #fff; stroke: none;"
+          transform="translate(-138.52 -168.11)"/>
+          <circle cx="75.48" cy="26.89" r="13" style="fill: #fff; stroke: none;"/></svg>
+        </p> -->
     </div>
 
     <div class="centerPanel the-end hidden">
-      <p>Good bye text</p>
+      <p>Now, you carefully put your pair of scissors into your <span id="the-end-word"></span>, so it might help you one day.</p>
     </div>
 
-    
+    <div class="points">
+      <div class="point tailorShears point-0">
+        <div class="label">a.</div>
+        <div class="text">
+          Adjustable screw balances a tight grip when you're sick and tired
+          with your life.
+        </div>
+      </div>
+      <div class="point tailorShears point-1">
+        <div class="label">b.</div>
+        <div class="text">
+          Thumb bow is optimized to support accurate cuts even if you're extremelly
+          annoyed with your work.
+        </div>
+      </div>
+      <div class="point tailorShears point-3">
+        <div class="label">c.</div>
+        <div class="text">
+          Silencer helps to cut through unnoticeably during corporate meetings.
+        </div>
+      </div>
 
-    <div class="point point-0">
-      <div class="label">1</div>
-      <div class="text">An adjustable screw to balance the grip</div>
-    </div>
-    <div class="point point-1">
-      <div class="label">2</div>
-      <div class="text">Thumb bow to shoot fast</div>
-    </div>
-    <div class="point point-2">
-      <div class="label">3</div>
-      <div class="text">Finger bow to shoot precisely</div>
-    </div>
-    <div class="point point-3">
-      <div class="label">4</div>
-      <div class="text">Silencer to shoot quietly</div>
+      <div class="point hairShears point-0">
+        <div class="label">a.</div>
+        <div class="text">
+          Finger rest provides a good posture for your hand while your lower back is on fire.
+        </div>
+      </div>
+      <div class="point hairShears point-1">
+        <div class="label">b.</div>
+        <div class="text">
+          Silencer or stopper prevents hearing loss when cutting around ears. Silicon pads are purchased separately.
+        </div>
+      </div>
+      <div class="point hairShears point-3">
+        <div class="label">c.</div>
+        <div class="text">
+          Eye-catching screw to adjust if you feel too bored or adventurous. 
+          A 300-page manual on how to find the best tension for your personality is probably availible somewhere.
+        </div>
+      </div>
+
+      <div class="point paperScissors point-0">
+        <div class="label">a.</div>
+        <div class="text">
+          Curved handles with pointed tips give this scissors a sophisticated look. 
+        </div>
+      </div>
+      <div class="point paperScissors point-1">
+        <div class="label">b.</div>
+        <div class="text">
+          Elongated blades are capable of cutting almost everything gracefully and acidly. 
+          Once extremelly important reports and memorable photos are great materials to start.
+        </div>
+      </div>
+      <div class="point paperScissors point-3">
+        <div class="label">c.</div>
+        <div class="text">
+         Sharp tips are edged to stab evil papers in a fit of anger.
+        </div>
+      </div>
     </div>
 
-    <div class="nav">
+    <div class="nav nav--helper hidden">
+      <p><span class="icon-pan"></span>Use one finger or the right mouse button to look around</p>
+      <p><span class="icon-zoom"></span>Use two fingers or the scroll wheel to zoom</p>
+      <p><span class="icon-click"></span>Touch or click onto scissors to view in detail</p>
+    </div>
+
+
+    <div class="nav nav--interaction">
       <div class="nav--advertisement">
         <div class="panel panel--advertisement tailorShears">
           <h2>Tailor Shears</h2>
-          <p>
-            Unique pair of industrial forged heavy-duty tailor shears with a
-            crane-style handle to ensure a steady and precise cut. Made with a
-            high-carbon steel, these scissors exhibit great edge retention and
-            are able to cut through multiple layers of various fabrics.
+          <p class="panel__text">
+            Unique pair of industrial crystal-forged heavy-duty tailor shears
+            with a crane-style handle to ensure a steady and precise cut. Made
+            with a high-carbon steel, these scissors exhibit great edge
+            retention and space-adaptive capacity. They are able to cut through
+            multiple layers of various fabrics and tree bark.
           </p>
         </div>
         <div class="panel panel--advertisement hairShears">
           <h2>Hair Shears</h2>
-          <p>
+          <p class="panel__text">
             Durable stainless steel offset scissors featuring razor-sharp
             heat-treated blades with acute convex edges. The ergonomic handle
             shape helps you to focus on the art of hair cutting while your hand
@@ -66,7 +159,7 @@
         </div>
         <div class="panel panel--advertisement paperScissors">
           <h2>Paper Scissors</h2>
-          <p>
+          <p class="panel__text">
             Multipurpose hardened stainless steel scissors starring
             titanium-coated sharp corrosion resistant blades with micro
             serrations fot clean cutting. Straight handles and big finger holes
@@ -74,9 +167,9 @@
           </p>
         </div>
         <div class="controls controls--advertisement">
-          <button class="button--inspect">Inspect</button>
-          <button class="button--look-around">Look Around</button>
-          <button class="button--choose">Take it</button>
+          <button class="button button--inspect">Inspect</button>
+          <button class="button button--look-around">Look Around</button>
+          <button class="button button--choose">Take it</button>
         </div>
       </div>
 
@@ -105,7 +198,7 @@
           </p>
         </div>
         <div class="controls controls--choice">
-          <button class="button--blink">Blink</button>
+          <button class="button button--blink">Feel the weight</button>
         </div>
       </div>
     </div>

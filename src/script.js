@@ -15,7 +15,8 @@ import { gsap, Power3 } from "gsap";
 import * as dat from "dat.gui";
 import Stats from "three/examples/jsm/libs/stats.module";
 import * as CANNON from "cannon-es";
-import { WebGLMultisampleRenderTarget } from "three";
+import { loading, initLoading } from "./loading";
+// import { WebGLMultisampleRenderTarget } from "three";
 
 /**
  * Stats
@@ -29,11 +30,14 @@ document.body.appendChild(stats.dom);
  */
 
 const loadingBarElement = document.querySelector(".loading-bar");
+const loadingBarText = loadingBarElement.querySelector(".loading-bar__text");
+let slider = undefined;
 
 let sceneReady = false;
 const loadingManager = new THREE.LoadingManager(
   // Loaded
   () => {
+    loadingBarElement.classList.add("ended");
     // Wait a little
     window.setTimeout(() => {
       // Animate overlay
@@ -44,23 +48,32 @@ const loadingManager = new THREE.LoadingManager(
       });
 
       // Update loadingBarElement
-      loadingBarElement.classList.add("ended");
-      loadingBarElement.style.transform = "";
+      slider.remove();
+      // loadingBarElement.style.transform = "";
     }, 500);
 
     window.setTimeout(() => {
       sceneReady = true;
       welcomeElement.classList.remove("hidden");
-    }, 2000);
+      loadingBarElement.classList.add("hidden");
+    }, 1000);
   },
 
   // Progress
   (itemUrl, itemsLoaded, itemsTotal) => {
     // Calculate the progress and update the loadingBarElement
     const progressRatio = itemsLoaded / itemsTotal;
-    loadingBarElement.style.transform = `scaleX(${progressRatio})`;
+    // loadingBarElement.style.transform = `scaleX(${progressRatio})`;
+    console.log(itemsLoaded, itemsTotal);
+    loading(slider, progressRatio);
+    loadingBarText.innerHTML = `${Math.round(progressRatio * 100)}%`;
   }
 );
+
+loadingManager.onStart = () => {
+  console.log("Started loading files ");
+  slider = initLoading();
+};
 
 const gltfLoader = new GLTFLoader(loadingManager);
 const cubeTextureLoader = new THREE.CubeTextureLoader(loadingManager);
@@ -73,24 +86,37 @@ const textureLoader = new THREE.TextureLoader();
 function startExperience() {
   state.started = true;
   welcomeElement.classList.add("hidden");
+  // pointsElement.classList.remove("hidden");
 
   gsap.to(controls.target, {
-    duration: 2,
+    duration: 4,
     y: 0,
     delay: 0,
     onComplete: () => {
       controls.enabled = true;
       welcomeElement.style.display = "none";
       navigationElement.style.display = "block";
+      helperElement.style.display = "block";
+      if (helperElement.classList.contains("hidden"))
+        helperElement.classList.remove("hidden");
     },
   });
 }
+
+const endWordsList = {
+  tailorShears: "spleen",
+  hairShears: "liver",
+  paperScissors: "pancreas",
+};
 
 function completeExperience() {
   if (choiceControlsElement.classList.contains("visible"))
     choiceControlsElement.classList.remove("visible");
   if (state.choicePanel) state.choicePanel.classList.remove("visible");
   theEndElement.style.display = "block";
+  if (state.finallySelectedModel) {
+    endWordElement.innerHTML = `${endWordsList[state.finallySelectedModel]}`;
+  }
   window.setTimeout(() => {
     theEndElement.classList.add("visible");
   }, 1000);
@@ -146,6 +172,7 @@ window.addEventListener("resize", () => {
  * Debug
  */
 const gui = new dat.GUI();
+gui.close();
 const perlinFolder = gui.addFolder("PerlinMaterial");
 const liquidFolder = gui.addFolder("LiquidMaterial");
 const metaballsFolder = gui.addFolder("MetaballsMaterial");
@@ -153,7 +180,7 @@ const voronoiFolder = gui.addFolder("VoronoiMaterial");
 const particlesFolder = gui.addFolder("Particles");
 
 let debugObject = {};
-debugObject.background = 0x90919;
+debugObject.background = 0x19090d;
 
 /**
  * State
@@ -176,9 +203,12 @@ const state = {
  */
 
 const canvas = document.querySelector("canvas.webgl");
+const pointsElement = document.querySelector(".points");
 const welcomeElement = document.querySelector(".welcome");
 const theEndElement = document.querySelector(".the-end");
-const navigationElement = document.querySelector(".nav");
+const endWordElement = document.querySelector("#the-end-word");
+const navigationElement = document.querySelector(".nav--interaction");
+const helperElement = document.querySelector(".nav--helper");
 //when all three models are available to inspect
 const advertisementNavElement = navigationElement.querySelector(
   ".nav--advertisement"
@@ -378,26 +408,56 @@ const points = [
   {
     model: "tailorShears",
     position: new THREE.Vector3(0.01, 0.01, 0.001),
-    element: document.querySelector(".point-0"),
+    element: pointsElement.querySelector(".tailorShears.point-0"),
     name: "screw",
   },
   {
     model: "tailorShears",
     position: new THREE.Vector3(0.12, 0.01, 0.1),
-    element: document.querySelector(".point-1"),
+    element: pointsElement.querySelector(".tailorShears.point-1"),
     name: "thumbBow",
   },
   {
     model: "tailorShears",
-    position: new THREE.Vector3(0.001, 0.01, 0.16),
-    element: document.querySelector(".point-2"),
-    name: "fingerBow",
+    position: new THREE.Vector3(-0.04, 0.002, 0.14),
+    element: pointsElement.querySelector(".tailorShears.point-3"),
+    name: "silencer",
   },
   {
-    model: "tailorShears",
-    position: new THREE.Vector3(-0.04, 0.002, 0.14),
-    element: document.querySelector(".point-3"),
+    model: "hairShears",
+    position: new THREE.Vector3(-0.001, 0.01, 0.2),
+    element: pointsElement.querySelector(".hairShears.point-0"),
+    name: "finger rest",
+  },
+  {
+    model: "hairShears",
+    position: new THREE.Vector3(-0.005, 0.01, 0.13),
+    element: pointsElement.querySelector(".hairShears.point-1"),
     name: "silencer",
+  },
+  {
+    model: "hairShears",
+    position: new THREE.Vector3(-0.01, 0.01, 0),
+    element: pointsElement.querySelector(".hairShears.point-3"),
+    name: "screw",
+  },
+  {
+    model: "paperScissors",
+    position: new THREE.Vector3(-0.001, 0.01, 0.1),
+    element: pointsElement.querySelector(".paperScissors.point-0"),
+    name: "handle",
+  },
+  {
+    model: "paperScissors",
+    position: new THREE.Vector3(-0.005, 0.01, -0.05),
+    element: pointsElement.querySelector(".paperScissors.point-1"),
+    name: "blade",
+  },
+  {
+    model: "paperScissors",
+    position: new THREE.Vector3(0, 0.01, -0.13),
+    element: pointsElement.querySelector(".paperScissors.point-3"),
+    name: "point",
   },
 ];
 
@@ -557,8 +617,16 @@ function animateCamera(targetPosition, targetPoint) {
   );
 }
 
-//click event
+function hideHelper() {
+  if (!helperElement.classList.contains("hidden")) {
+    helperElement.classList.add("hidden");
+    setTimeout(() => {
+      helperElement.style.display = "none";
+    }, 300);
+  }
+}
 
+//click event
 function handleClick(e) {
   // Cast a ray from the mouse and handle events
   raycaster.setFromCamera(mouse, camera);
@@ -568,7 +636,7 @@ function handleClick(e) {
       intersects[0].object.userData.groupName
     : null;
   if (group && group != state.selectedModel && !state.finallySelectedModel) {
-    console.log(group, intersects);
+    hideHelper()
     if (state.selectedModel)
       panels[state.selectedModel].classList.remove("visible");
     if (controlsElement.classList.contains("visible")) {
@@ -585,6 +653,8 @@ function handleClick(e) {
     const targetPosition = modelsParams.cameraPositions[group];
     const targetPoint = models[group].position;
     animateCamera(targetPosition, targetPoint);
+    if (state.inspectMode)
+      controlsElement.querySelector(".button--inspect").click();
   }
 }
 window.addEventListener("touchend", handleClick);
@@ -644,14 +714,19 @@ function setCameraTopViewPosition() {
 
 // Controls
 const controls = new OrbitControls(camera, canvas);
-controls.maxDistance = 1;
+controls.target.set(0, 1, 0); //then animate to look down
 controls.enableDamping = true;
-//controls.enablePan =false;
-controls.rotateSpeed = 0.5;
+//  zoom
+controls.enableZoom = true;
+controls.maxDistance = 1;
+//  rotation
+controls.enableRotate = true;
+//  pan
+controls.enablePan = true;
+// controls.rotateSpeed = 0.5;
 controls.saveState();
 //controls.autoRotate = true;
 //controls.autoRotateSpeed = 0.2;
-controls.target.set(0, 0.7, 0); //then animate to look down
 controls.enabled = false;
 // controls.target.set(0, 0, 0);//lookdown
 
@@ -702,6 +777,14 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+function hidePoints() {
+  for (const point of points) {
+    //skip points that are irrelevant for the selected model
+    if (point.element.classList.contains("visible"))
+      point.element.classList.remove("visible");
+  }
+}
+
 function toggleRotation() {
   models[state.selectedModel].rotation.z =
     modelsParams.fixedRotationZ[state.selectedModel];
@@ -712,6 +795,7 @@ function toggleInspectMode() {
   if (state.inspectMode) {
     state.inspectMode = false;
     this.innerHTML = "Inspect";
+    hidePoints();
     // if (!navigationElement.classList.contains("visible")) {
     //     navigationElement.classList.add("visible");
     //   }
@@ -726,9 +810,7 @@ function toggleInspectMode() {
 }
 
 function enableTopView() {
-  console.log(state);
   setCameraTopViewPosition();
-  console.log(state);
   if (controlsElement.classList.contains("visible")) {
     controlsElement.classList.remove("visible");
   }
@@ -739,12 +821,13 @@ function enableTopView() {
   state.rotationStopped = false;
   controlsElement.querySelector(".button--inspect").innerHTML = "Inspect";
   state.inspectMode = false;
+  hidePoints();
 }
 
 function chooseModel(e) {
   state.finallySelectedModel = state.selectedModel;
   //controls.autoRotate = true;
-  state.rotateGroup = true;
+  state.rotateGroup = true; //to have lights stable
   enableTopView(e);
   window.setTimeout(() => {
     state.rotateSphere = false;
@@ -1031,113 +1114,107 @@ objectsToUpdate.push({ mesh: sphere, body: body });
 const clock = new THREE.Clock();
 const radiansPerSecond = 0.5;
 
-startExperience();
-
 const tick = () => {
   stats.begin();
 
   const delta = clock.getDelta();
+  const elapsedTime = clock.getElapsedTime();
+
   // Update controls
   controls.update();
 
-  // Update points only when the scene is ready
-  if (sceneReady & state.started) {
-    //Go through each point
-    for (const point of points) {
-      //skip points that are irrelevant for the selected model OR points that are far away
-      if (
-        state.selectedModel != point.model ||
-        (state.selectedModel == point.model && !state.rotationStopped) ||
-        point.position.distanceTo(camera.position) > 0.7
-      ) {
-        point.element.classList.remove("visible");
-        continue;
-      }
-
-      //Rotate a model
-      const newPosition = point.position.clone();
-      const q = new THREE.Quaternion();
-      q.setFromEuler(models[point.model].rotation);
-      newPosition.applyQuaternion(q);
-      newPosition.add(models[point.model].position);
-
-      // Get 2D screen position
-      const screenPosition = newPosition.clone();
-      screenPosition.project(camera);
-      // Set the raycaster
-      raycaster.setFromCamera(screenPosition, camera);
-      const intersects = raycaster.intersectObjects(
-        models[state.selectedModel].children,
-        true
-      );
-      // No intersect found
-      if (intersects.length === 0) {
-        // Show
-        point.element.classList.add("visible");
-      }
-      // Intersect found
-      else {
-        // Get the distance of the intersection and the distance of the point
-        const intersectionDistance = intersects[0].distance;
-        const pointDistance = newPosition.distanceTo(camera.position);
-        // Intersection is close than the point
-        if (intersectionDistance < pointDistance) {
-          // Hide
-          point.element.classList.remove("visible");
+  if (sceneReady) {
+    if (state.inspectMode && state.rotationStopped) {
+      //Go through each point
+      for (const point of points) {
+        //skip points that are irrelevant for the selected model
+        if (state.selectedModel != point.model) {
+          if (point.element.classList.contains("visible"))
+            point.element.classList.remove("visible");
+          continue;
         }
-        // Intersection is further than the point
-        else {
+
+        //Rotate
+        const newPosition = point.position.clone();
+        const q = new THREE.Quaternion();
+        q.setFromEuler(models[point.model].rotation);
+        newPosition.applyQuaternion(q);
+        newPosition.add(models[point.model].position);
+
+        // Get 2D screen position
+        const screenPosition = newPosition.clone();
+        screenPosition.project(camera);
+        // Set the raycaster
+        raycaster.setFromCamera(screenPosition, camera);
+        const intersects = raycaster.intersectObjects(
+          models[state.selectedModel].children,
+          true
+        );
+        // No intersect found
+        if (intersects.length === 0) {
           // Show
           point.element.classList.add("visible");
         }
-      }
-      const translateX = screenPosition.x * sizes.width * 0.5;
-      const translateY = -screenPosition.y * sizes.height * 0.5;
-      point.element.style.transform = `translateX(${translateX}px) translateY(${translateY}px)`;
-    }
-  }
-
-  const elapsedTime = clock.getElapsedTime();
-
-  //material.uniforms.uTime.value = elapsedTime;
-  //liquidMaterial.uniforms.uTime.value = elapsedTime;
-  //liquidMaterial.userData.uTime.value = elapsedTime;
-  //metaballsMaterial.userData.uTime.value = elapsedTime;
-
-  centerModel.material.userData.uTime.value = elapsedTime;
-  //sphere.material.uniforms.uTime.value = elapsedTime;
-
-  //Rotate each model
-  for (let model of group.children) {
-    const modelName = model.userData.groupName;
-    if (state.selectedModel == modelName && state.rotationStopped) {
-      continue;
-    }
-    model.rotation.z += radiansPerSecond * delta;
-  }
-
-  if (state.rotateGroup) group.rotation.y += 0.005;
-  if (state.rotateSphere) centerModel.rotation.y += 0.005;
-  else if (state.rotateCentralModel) centerModel.rotation.z += 0.005;
-
-  if (state.simulatePhysics) {
-    // Update physics
-    world.step(1 / 60, delta, 3);
-
-    for (const object of objectsToUpdate) {
-      object.mesh.position.copy(object.body.position);
-      object.mesh.quaternion.copy(object.body.quaternion);
-      if (object.mesh.position.length() > 1.5) {
-        object.mesh.geometry.dispose();
-        object.mesh.material.dispose();
-        scene.remove(object.mesh);
-        state.simulatePhysics = false;
+        // Intersect found
+        else {
+          // Get the distance of the intersection and the distance of the point
+          const intersectionDistance = intersects[0].distance;
+          const pointDistance = newPosition.distanceTo(camera.position);
+          // Intersection is close than the point
+          if (intersectionDistance < pointDistance) {
+            // Hide
+            point.element.classList.remove("visible");
+          }
+          // Intersection is further than the point
+          else {
+            // Show
+            point.element.classList.add("visible");
+          }
+        }
+        const translateX = screenPosition.x * sizes.width * 0.5;
+        const translateY = -screenPosition.y * sizes.height * 0.5;
+        point.element.style.transform = `translateX(${translateX}px) translateY(${translateY}px)`;
       }
     }
-  }
 
-  // Update material
-  particleSystem.material.uniforms.uTime.value = elapsedTime;
+    //material.uniforms.uTime.value = elapsedTime;
+    //liquidMaterial.uniforms.uTime.value = elapsedTime;
+    //liquidMaterial.userData.uTime.value = elapsedTime;
+    //metaballsMaterial.userData.uTime.value = elapsedTime;
+
+    centerModel.material.userData.uTime.value = elapsedTime;
+    particleSystem.material.uniforms.uTime.value = elapsedTime;
+    //sphere.material.uniforms.uTime.value = elapsedTime;
+
+    //Rotate each model
+    for (let model of group.children) {
+      const modelName = model.userData.groupName;
+      if (state.selectedModel == modelName && state.rotationStopped) {
+        continue;
+      }
+      model.rotation.z += radiansPerSecond * delta;
+    }
+
+    if (state.rotateGroup) group.rotation.y += 0.005;
+    if (state.rotateSphere) centerModel.rotation.y += 0.005;
+    else if (state.rotateCentralModel) centerModel.rotation.z += 0.005;
+
+    if (state.simulatePhysics) {
+      // Update physics
+      world.step(1 / 60, delta, 3);
+
+      for (const object of objectsToUpdate) {
+        object.mesh.position.copy(object.body.position);
+        object.mesh.quaternion.copy(object.body.quaternion);
+        if (object.mesh.position.length() > 1.5) {
+          object.mesh.geometry.dispose();
+          object.mesh.material.dispose();
+          scene.remove(object.mesh);
+          state.simulatePhysics = false;
+        }
+      }
+    }
+  }
 
   // Render
   renderer.render(scene, camera);
