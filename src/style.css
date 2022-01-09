@@ -32,7 +32,7 @@ button {
   padding: 0.5rem 1rem;
   border: none;
   color: white;
-  border: 1px solid #ffffff77; 
+  border: 1px solid #ffffff77;
   border-radius: 3px;
   transition: background-color ease-in-out 300ms;
 }
@@ -54,25 +54,25 @@ button:hover {
   background-color: #b86cff;
 }
 
-.button{
-    position: relative;
+.button {
+  position: relative;
 }
 
-.button::after{
-    content: "";
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    /* background-color: #b86cff; */
-    position: absolute;
-    top:50%;
-    left:5px;
-    transform: translate(0,-50%);
-    transition: all 300ms ease-in-out;
+.button::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  /* background-color: #b86cff; */
+  position: absolute;
+  top: 50%;
+  left: 5px;
+  transform: translate(0, -50%);
+  transition: all 300ms ease-in-out;
 }
 
-.button:hover::after{
-    background-color: #b86cff; 
+.button:hover::after {
+  background-color: #b86cff;
 }
 
 @media screen and (max-width: 600px) {
@@ -279,7 +279,6 @@ button:hover {
   padding: 1rem;
   /* pointer-events: none; */
   display: none;
-  
 }
 
 @media screen and (max-width: 1000px) {
@@ -303,17 +302,28 @@ button:hover {
 }
 
 .nav--helper {
-    display: none;
-    opacity: 1;
-    transition: opacity 300ms ease-in-out;
+  display: none;
+  opacity: 1;
+  transition: opacity 200ms ease-in-out;
 }
 
 .nav--helper.hidden {
-    opacity: 0;
-  }
+  opacity: 0;
+}
 
 .nav--helper p {
-  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.nav--helper .icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-right: 1rem;
+}
+
+.nav--helper .icon circle {
+  fill: white;
 }
 
 .panel {
@@ -357,4 +367,17 @@ button:hover {
 .controls.visible {
   opacity: 1;
   transition: opacity ease-in-out 1s;
+}
+
+
+.footer{
+    position: absolute;
+    padding-top: 0;
+    bottom: -200%;
+    color: #b86cff;
+    font-size: 1rem;
+}
+
+.footer a{
+    color: #e0beff;
 }

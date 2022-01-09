@@ -63,7 +63,12 @@
     </div>
 
     <div class="centerPanel the-end hidden">
-      <p>Now, you carefully put your pair of <span id="the-end-scissors">scissors</span> into your <span id="the-end-word"></span>, so it might help you one day.</p>
+      <p>...you carefully put your pair of <span id="the-end-scissors">scissors</span> into your <span id="the-end-word"></span>. It might help you one day.</p>
+
+      <footer class="footer"> <p>
+        This website is a part of my Cizars project. Check it out <a href="https://kor-al.github.io/cizars-gallery/" alt="Cizars Gallery" target="_blank">here</p>
+        </footer>
+
     </div>
 
     <div class="points">
@@ -130,9 +135,24 @@
     </div>
 
     <div class="nav nav--helper hidden">
-      <p><span class="icon-pan"></span>Use one finger or the right mouse button to look around</p>
-      <p><span class="icon-zoom"></span>Use two fingers or the scroll wheel to zoom</p>
-      <p><span class="icon-click"></span>Touch or click onto scissors to view in detail</p>
+      <p><svg class="icon icon--pan" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <circle cx="10" cy="10" r="3" style="stroke: none; ">
+          <animateTransform attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" begin="0s" dur="3s" repeatCount="indefinite" />
+        </circle>
+      </svg><span>Use one finger or the right mouse button to look around</span></p>
+      <p><svg class="icon icon--zoom" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <circle cx="15" cy="10" r="3" style="stroke: none;">
+          <animate attributeName="cy" attributeType="XML" values="10;30;10" begin="0s" dur="1s" fill="remove" repeatCount="indefinite" />
+        </circle>
+        <circle cx="25" cy="10" r="3" style="stroke: none;">
+          <animate attributeName="cy" attributeType="XML" values="10;30;10" begin="0s" dur="1s" fill="remove" repeatCount="indefinite" />
+        </circle>
+      </svg><span>Use two fingers or the scroll wheel to zoom</span></p>
+      <p><svg class="icon icon--click" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <circle cx="20" cy="20" r="5" style="stroke: none;">
+          <animate id="op" attributeName="r" attributeType="XML" values="5;1;5" dur="2s" begin="1s;op.end+1s" fill="remove" repeatCount="indefinite" />
+        </circle>
+      </svg><span>Touch or click onto scissors to view in detail</span></p>
     </div>
 
 
@@ -198,7 +218,7 @@
           </p>
         </div>
         <div class="controls controls--choice">
-          <button class="button button--blink">Feel the weight</button>
+          <button class="button button--blink">Blink</button>
         </div>
       </div>
     </div>

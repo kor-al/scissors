@@ -630,12 +630,31 @@ function animateCamera(targetPosition, targetPoint) {
 }
 
 function hideHelper() {
-  if (!helperElement.classList.contains("hidden")) {
-    helperElement.classList.add("hidden");
-    setTimeout(() => {
-      helperElement.style.display = "none";
-    }, 300);
+  helperElement.style.display = "none";
+  // if (!helperElement.classList.contains("hidden")) {
+  //   helperElement.classList.add("hidden");
+  //   window.setTimeout(() => {
+  //     helperElement.style.display = "none";
+  //   }, 300);
+  // }
+}
+
+function hidePanel(panel){
+  if (panel.classList.contains("visible")) {
+  panel.classList.remove("visible");
   }
+  window.setTimeout(() => {
+    panel.style.display = "none";
+    advertisementNavElement.style.display = "none";
+  }, 500);
+}
+
+function showPanel(panel){
+  panel.style.display = "block";
+  advertisementNavElement.style.display = "block";
+  if (!panel.classList.contains("visible")) {
+    panel.classList.add("visible");
+    }
 }
 
 //click event
@@ -661,7 +680,8 @@ function handleClick(e) {
       }, 1000);
     }
     state.selectedModel = group;
-    panels[state.selectedModel].classList.add("visible");
+    // panels[state.selectedModel].classList.add("visible");
+    showPanel(panels[state.selectedModel])
     const targetPosition = modelsParams.cameraPositions[group];
     const targetPoint = models[group].position;
     animateCamera(targetPosition, targetPoint);
@@ -826,8 +846,8 @@ function enableTopView() {
   if (controlsElement.classList.contains("visible")) {
     controlsElement.classList.remove("visible");
   }
-  if (state.selectedModel)
-    panels[state.selectedModel].classList.remove("visible");
+  if (state.selectedModel) hidePanel(panels[state.selectedModel])
+    // panels[state.selectedModel].classList.remove("visible");
 
   state.selectedModel = null;
   state.rotationStopped = false;
