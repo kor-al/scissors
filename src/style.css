@@ -249,7 +249,7 @@ button:hover {
   padding: 20px;
   border-radius: 4px;
   background: #00000077;
-  border: 1px solid #ffffff77;
+  /* border: 1px solid #ffffff77; */
   color: #ffffff;
   line-height: 1.3em;
   font-family: Helvetica, Arial, sans-serif;
