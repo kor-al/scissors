@@ -64,7 +64,6 @@ const loadingManager = new THREE.LoadingManager(
     // Calculate the progress and update the loadingBarElement
     const progressRatio = itemsLoaded / itemsTotal;
     // loadingBarElement.style.transform = `scaleX(${progressRatio})`;
-    console.log(itemsLoaded, itemsTotal);
     loading(slider, progressRatio);
     loadingBarText.innerHTML = `${Math.round(progressRatio * 100)}%`;
   }
@@ -361,7 +360,6 @@ metaballsMaterialGen.addGui(metaballsFolder);
 function assignMaterial(parent, mlt, type = null) {
   parent.traverse((o) => {
     if (o.isMesh) {
-      console.log(o.name, type);
       if (type === null || (type != null && o.name.includes(type))) {
         o.material = mlt;
         o.ojectID = type;
@@ -544,7 +542,6 @@ for (let i = 0; i < modelsParams.files.length; i++) {
     const model = gltf.scene.children[0]; //screw as group
     model.userData.groupName = modelsParams.names[i];
     model.position.set(positionsOnCircle[i].x, 0, positionsOnCircle[i].z);
-    console.log(model.userData.groupName, "pivot", model.position);
     model.scale.set(2.5, 2.5, 2.5);
 
     if (sizes.height > sizes.width) {
@@ -623,7 +620,7 @@ function animateCamera(targetPosition, targetPoint) {
         controls.target.lerp(targetPoint, this.progress());
       },
       onComplete: () => {
-        console.log("finished");
+        // console.log("finished");
       },
       ease: "ease-in-out",
     }
@@ -772,7 +769,6 @@ function getRotationAxisAndAngle(from, to) {
   if (distance.length() < 0.01) {
     //exit - don't do any rotation
     //distance is too small for rotation to be numerically stable
-    console.log("no rotation");
   }
 
   //Don't actually need to call normalize for directionA - just doing it to indicate
@@ -785,7 +781,7 @@ function getRotationAxisAndAngle(from, to) {
   if (Math.abs(rotationAngle) < 0.01) {
     //exit - don't do any rotation
     //angle is too small for rotation to be numerically stable
-    console.log("no rotation");
+    // console.log("no rotation");
   }
 
   const rotationAxis = directionA.clone().cross(directionB).normalize();
