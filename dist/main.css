@@ -160,7 +160,8 @@ button:hover {
   font-size: 3rem;
   opacity: 0.5;
   transition: opacity 1s;
-  padding: 1rem;
+  padding-bottom: 3rem;
+  padding-right: 1rem;
 }
 
 /* #slider { 
@@ -372,11 +373,16 @@ button:hover {
 
 .footer{
     position: absolute;
-    padding-top: 0;
-    bottom: -200%;
+    padding: 1rem;
     color: #b86cff;
     font-size: 1rem;
+
+    position: fxed;
+    left: 0%;
+    bottom: 0%;
+    /* transform: translate(-50%, -50%); */
 }
+
 
 .footer a{
     color: #e0beff;

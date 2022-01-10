@@ -221,6 +221,7 @@ const endWordElement = document.querySelector("#the-end-word");
 const endScissorsElement = document.querySelector("#the-end-scissors");
 const navigationElement = document.querySelector(".nav--interaction");
 const helperElement = document.querySelector(".nav--helper");
+const footerElement = document.querySelector(".footer");
 //when all three models are available to inspect
 const advertisementNavElement = navigationElement.querySelector(
   ".nav--advertisement"
@@ -629,8 +630,8 @@ function animateCamera(targetPosition, targetPoint) {
   );
 }
 
-function hideHelper() {
-  helperElement.style.display = "none";
+function displayNone(element) {
+  element.style.display = "none";
   // if (!helperElement.classList.contains("hidden")) {
   //   helperElement.classList.add("hidden");
   //   window.setTimeout(() => {
@@ -667,7 +668,8 @@ function handleClick(e) {
       intersects[0].object.userData.groupName
     : null;
   if (group && group != state.selectedModel && !state.finallySelectedModel) {
-    hideHelper()
+    displayNone(helperElement)
+    displayNone(footerElement)
     if (state.selectedModel)
       panels[state.selectedModel].classList.remove("visible");
     if (controlsElement.classList.contains("visible")) {
@@ -846,8 +848,11 @@ function enableTopView() {
   if (controlsElement.classList.contains("visible")) {
     controlsElement.classList.remove("visible");
   }
-  if (state.selectedModel) hidePanel(panels[state.selectedModel])
+  if (state.selectedModel) {
+    hidePanel(panels[state.selectedModel])
+    footerElement.style.display = 'block'
     // panels[state.selectedModel].classList.remove("visible");
+  }
 
   state.selectedModel = null;
   state.rotationStopped = false;
@@ -861,7 +866,7 @@ function chooseModel(e) {
   //controls.autoRotate = true;
   state.rotateGroup = true; //to have lights stable
   enableTopView(e);
-  hideHelper(); //in case it was not deleted previously
+  displayNone(helperElement); //in case it was not deleted previously
   window.setTimeout(() => {
     state.rotateSphere = false;
     state.simulatePhysics = true;
